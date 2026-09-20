@@ -5,13 +5,20 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,yml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,yml}\"",
+    "rust:fmt": "cargo fmt --all -- --check",
+    "rust:lint": "cargo clippy --workspace --all-targets -- -D warnings",
+    "rust:test": "cargo test --workspace",
+    "program:build": "anchor build",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm rust:fmt && pnpm rust:lint && pnpm rust:test"
   },
   "devDependencies": {
     "prettier": "3.9.6",
-    "turbo": "^2.11.2",
-    "typescript": "7.0.2"
+    "turbo": "2.11.2",
+    "typescript": "6.0.3"
   },
   "packageManager": "pnpm@11.25.0",
   "engines": {

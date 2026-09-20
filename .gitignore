@@ -36,3 +36,13 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Mandate: secrets, keys, chain tooling, evidence
+.keys/
+*.keypair.json
+.env.observer*
+.anchor/
+target/
+test-ledger/
+.surfpool/
+/evidence-store/

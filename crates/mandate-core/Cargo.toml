@@ -1,0 +1,12 @@
+[package]
+name = "mandate-core"
+version = "0.1.0"
+description = "Pure, dependency-free settlement math shared by the Mandate program and cross-checked against TypeScript"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

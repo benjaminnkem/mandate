@@ -1,0 +1,27 @@
+[package]
+name = "mandate"
+version = "0.1.0"
+description = "Mandate: escrow, bids, attested epochs and exact reward settlement"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "mandate"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+
+[dependencies]
+anchor-lang = "1.2.0"
+
+[lints]
+workspace = true

@@ -1,0 +1,9 @@
+node_modules
+.next
+.turbo
+target
+dist
+coverage
+pnpm-lock.yaml
+docs/evidence
+.keys

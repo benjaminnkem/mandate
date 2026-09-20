@@ -57,41 +57,38 @@ as provider failure.
 
 ## Repository status
 
-The build has not started. The repository currently holds the documentation set plus the Turborepo starter's
-shared config packages (`packages/eslint-config`, `packages/typescript-config`, `packages/ui`). No Anchor
-workspace, program, app or domain package exists yet.
+Prompt 1 of [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md) is complete: the monorepo is scaffolded, quality gates
+pass, and a real PreStocks/USDC Meteora DLMM market has been researched and verified onchain (see
+[`docs/research/current-market.md`](docs/research/current-market.md)). No settlement logic, measurement math or
+program instruction exists yet, and no market is approved.
 
-The next step is Prompt 1 in [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md): verify current external docs,
-research and verify a real PreStocks/USDC Meteora DLMM pool, write the founding ADRs, and scaffold the
-monorepo described in [`docs/TECHNICAL_SPEC.md`](docs/TECHNICAL_SPEC.md) §3.
+| Area | State |
+| --- | --- |
+| `apps/web` (Next.js), `apps/api` (Fastify health/meta), `apps/indexer`, `apps/scheduler`, `apps/observer` | runnable shells with validated env |
+| `packages/config`, `packages/observability`, `packages/prestocks` | implemented and tested |
+| `packages/meteora` | official SDK loading only; measurement engine is Prompt 3 |
+| `packages/domain`, `packages/solana`, `packages/db`, `packages/testkit` | empty shells |
+| `programs/mandate`, `crates/mandate-core` | builds (`anchor build`); no instructions yet |
+| Architecture decisions | [`docs/adr/`](docs/adr/) |
 
 ## Toolchain
 
-Required and present:
-
-- Node.js >= 24 (`.nvmrc` pending) and pnpm 11.25.0 via `packageManager`.
-
-Required and **not yet installed** on a fresh checkout — see [`docs/ENVIRONMENT_SETUP.md`](docs/ENVIRONMENT_SETUP.md) §1:
-
-- Rust / Cargo
-- Solana CLI
-- Anchor (via `avm`)
-- Surfpool, for mainnet-fork integration testing
-- PostgreSQL, and Redis or the chosen queue
-
-Exact pinned versions are recorded during Prompt 1 in `docs/adr/` and `docs/research/current-docs-lock.md`.
+Pinned and verified (details and sources in [`docs/adr/0002-runtime-and-tool-versions.md`](docs/adr/0002-runtime-and-tool-versions.md)):
+Node >= 24, pnpm 11.25.0, TypeScript 6.0.3, Rust 1.89.0, Solana CLI 4.2.2, Anchor 1.2.0, Surfpool 1.6.0,
+`@meteora-ag/dlmm` 1.9.14. See [`docs/ENVIRONMENT_SETUP.md`](docs/ENVIRONMENT_SETUP.md) for PostgreSQL/Redis.
 
 ## Commands
 
 ```bash
 pnpm install
-pnpm check-types
-pnpm lint
-pnpm build
+pnpm check              # format, lint, typecheck, tests, rustfmt, clippy, cargo tests
+pnpm program:build      # anchor build
+pnpm --filter @mandate/scripts inspect:prestocks -- --symbol OPENAI
+pnpm --filter @mandate/scripts market:discover -- --symbol OPENAI
 ```
 
-Program, observer, indexer and end-to-end commands are added as their build steps land, and are documented in
-the runbooks rather than here.
+The two `scripts` commands are read-only and need `SOLANA_RPC_HTTP_URL`. Program, observer, indexer and
+end-to-end commands are added as their build steps land.
 
 ## Network provenance
 

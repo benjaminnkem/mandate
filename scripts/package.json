@@ -1,0 +1,28 @@
+{
+  "name": "@mandate/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "operator and research scripts (read-only against chain state)",
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "inspect:prestocks": "node src/inspect-prestocks.ts",
+    "market:discover": "node src/discover-meteora-market.ts"
+  },
+  "dependencies": {
+    "@mandate/config": "workspace:*",
+    "@mandate/prestocks": "workspace:*",
+    "@solana/web3.js": "1.99.0",
+    "@mandate/meteora": "workspace:*"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "26.6.2",
+    "eslint": "10.11.0",
+    "typescript": "6.0.3",
+    "vitest": "5.0.1"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@mandate/meteora",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Meteora DLMM venue adapter and canonical measurement algorithm",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@meteora-ag/dlmm": "1.9.14",
+    "@solana/web3.js": "1.99.0"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "26.6.2",
+    "eslint": "10.11.0",
+    "typescript": "6.0.3",
+    "vitest": "5.0.1"
+  }
+}
