@@ -363,6 +363,10 @@ pub struct Mandate {
     pub epoch_seconds: i64,
     pub total_epochs: u32,
     pub end_at: i64,
+    /// Last instant the sponsor may award: start_at - position_lock_buffer - min_setup_window. Fixed at creation.
+    pub acceptance_cutoff: i64,
+    /// Instant the position set locks: start_at - position_lock_buffer. Fixed at creation.
+    pub position_lock_at: i64,
 
     pub max_reward_raw: u64,
     pub accepted_reward_raw: u64,
@@ -481,7 +485,7 @@ pub struct PositionSet {
 V1 rules:
 
 - accepted provider only;
-- created/updated only before `start_at - position_lock_buffer_seconds`;
+- created/updated only before the mandate's stored `position_lock_at` (`start_at - position_lock_buffer_seconds`); each call replaces the whole set;
 - after lock, immutable for mandate lifetime;
 - observer validates actual position ownership/pool membership; the program only verifies registered keys/bounds.
 
@@ -676,6 +680,15 @@ Accepted provider only.
 - after cutoff immutable.
 
 The observer later verifies actual Meteora ownership/pool membership.
+
+### 6.9b `refund_unactivated_mandate`
+
+Sponsor only. Added in Prompt 7 (ADR 0014).
+
+Allowed only when the mandate is `Awarded`, `now >= position_lock_at`, and **no PositionSet account exists** (the provider
+never registered). Returns everything still in the vault to the sponsor, closes the vault, sets `sponsor_withdrawn_raw =
+max_reward_raw` and status `Cancelled`. Impossible while the provider can still register and once any set exists. Not
+gated on the pause flag. This is a refund, not a penalty.
 
 ### 6.10 `activate_mandate`
 

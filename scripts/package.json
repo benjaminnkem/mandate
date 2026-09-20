@@ -11,7 +11,8 @@
     "inspect:prestocks": "node src/inspect-prestocks.ts",
     "market:discover": "node src/discover-meteora-market.ts",
     "market:measure": "node src/measure-pool.ts",
-    "market:positions": "node src/list-positions.ts"
+    "market:positions": "node src/list-positions.ts",
+    "positions:inspect": "node src/inspect-positions.ts"
   },
   "dependencies": {
     "@mandate/config": "workspace:*",

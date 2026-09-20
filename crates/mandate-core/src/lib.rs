@@ -14,6 +14,7 @@ pub mod error;
 pub mod math;
 pub mod meteora;
 pub mod observers;
+pub mod positions;
 pub mod protocol;
 pub mod reward;
 pub mod timing;

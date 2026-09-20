@@ -52,3 +52,6 @@ export const findBidPda = (
   programId = MANDATE_PROGRAM_ID,
 ): PublicKey =>
   derive([utf8("bid"), mandate.toBytes(), provider.toBytes(), u64le(nonce)], programId);
+
+export const findPositionSetPda = (mandate: PublicKey, programId = MANDATE_PROGRAM_ID): PublicKey =>
+  derive([utf8("position_set"), mandate.toBytes()], programId);

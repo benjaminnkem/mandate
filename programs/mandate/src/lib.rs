@@ -2,7 +2,8 @@
 //!
 //! Implemented so far: protocol configuration, two-step admin transfer, new-risk pause, immutable
 //! versioned observer sets, the approved market registry, mandate creation with USDC escrow, open
-//! bidding and award. Positions, attestations and settlement arrive in later steps (docs/BUILD_PROMPTS.md).
+//! bidding, award, the provider's locked position set, and activation. Attestations and settlement
+//! arrive in later steps (docs/BUILD_PROMPTS.md).
 //!
 //! Authoritative design: docs/TECHNICAL_SPEC.md sections 5 and 6.
 //!
@@ -121,5 +122,23 @@ pub mod mandate {
         instructions::withdraw_surplus_after_award::handle_withdraw_surplus_after_award(
             ctx, amount_raw,
         )
+    }
+
+    /// Provider: register (or, before the lock, replace) the position accounts that will be measured.
+    pub fn register_positions(
+        ctx: Context<RegisterPositions>,
+        positions: Vec<Pubkey>,
+    ) -> Result<()> {
+        instructions::register_positions::handle_register_positions(ctx, positions)
+    }
+
+    /// Anyone: start an awarded mandate once its start time has arrived and positions are registered.
+    pub fn activate_mandate(ctx: Context<ActivateMandate>) -> Result<()> {
+        instructions::activate_mandate::handle_activate_mandate(ctx)
+    }
+
+    /// Sponsor: recover the escrow of an awarded mandate whose provider never registered positions.
+    pub fn refund_unactivated_mandate(ctx: Context<RefundUnactivatedMandate>) -> Result<()> {
+        instructions::refund_unactivated_mandate::handle_refund_unactivated_mandate(ctx)
     }
 }

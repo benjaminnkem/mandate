@@ -848,3 +848,117 @@ impl SignerCopy for solana_keypair::Keypair {
         solana_keypair::Keypair::new_from_array(*self.secret_bytes())
     }
 }
+
+// ---- position sets, activation and refund (Prompt 7) -----------------------------------------
+
+pub fn position_set_pda(mandate_key: &Pubkey) -> Pubkey {
+    Pubkey::find_program_address(
+        &[mandate::POSITION_SET_SEED, mandate_key.as_ref()],
+        &mandate::ID,
+    )
+    .0
+}
+
+impl Env {
+    pub fn ix_register_positions(
+        &self,
+        provider: &Pubkey,
+        mandate_key: &Pubkey,
+        positions: Vec<Pubkey>,
+    ) -> Instruction {
+        self.ix_register_positions_with(
+            provider,
+            mandate_key,
+            position_set_pda(mandate_key),
+            positions,
+        )
+    }
+
+    pub fn ix_register_positions_with(
+        &self,
+        provider: &Pubkey,
+        mandate_key: &Pubkey,
+        set: Pubkey,
+        positions: Vec<Pubkey>,
+    ) -> Instruction {
+        Instruction {
+            program_id: mandate::ID,
+            accounts: mandate::accounts::RegisterPositions {
+                provider: *provider,
+                protocol: protocol_pda(),
+                mandate: *mandate_key,
+                position_set: set,
+                system_program: pk(SYSTEM_PROGRAM),
+            }
+            .to_account_metas(None),
+            data: mandate::instruction::RegisterPositions { positions }.data(),
+        }
+    }
+
+    pub fn ix_activate(&self, mandate_key: &Pubkey) -> Instruction {
+        self.ix_activate_with(mandate_key, position_set_pda(mandate_key))
+    }
+
+    pub fn ix_activate_with(&self, mandate_key: &Pubkey, set: Pubkey) -> Instruction {
+        Instruction {
+            program_id: mandate::ID,
+            accounts: mandate::accounts::ActivateMandate {
+                mandate: *mandate_key,
+                position_set: set,
+            }
+            .to_account_metas(None),
+            data: mandate::instruction::ActivateMandate {}.data(),
+        }
+    }
+
+    pub fn ix_refund_unactivated(
+        &self,
+        sponsor: &Pubkey,
+        mandate_key: &Pubkey,
+        sponsor_usdc: &Pubkey,
+    ) -> Instruction {
+        Instruction {
+            program_id: mandate::ID,
+            accounts: mandate::accounts::RefundUnactivatedMandate {
+                sponsor: *sponsor,
+                protocol: protocol_pda(),
+                mandate: *mandate_key,
+                position_set: position_set_pda(mandate_key),
+                usdc_mint: self.usdc_mint,
+                token_program: pk(SPL_TOKEN),
+                vault: vault_pda(mandate_key),
+                sponsor_usdc: *sponsor_usdc,
+            }
+            .to_account_metas(None),
+            data: mandate::instruction::RefundUnactivatedMandate {}.data(),
+        }
+    }
+
+    pub fn register_positions(
+        &mut self,
+        provider: &Keypair,
+        mandate_key: &Pubkey,
+        positions: Vec<Pubkey>,
+    ) -> Sent {
+        let ix = self.ix_register_positions(&provider.pubkey(), mandate_key, positions);
+        let signer = Keypair::new_from_array(*provider.secret_bytes());
+        self.send(&[ix], &[&signer])
+    }
+
+    /// Anyone can activate; the fee payer alone signs.
+    pub fn activate(&mut self, mandate_key: &Pubkey) -> Sent {
+        let ix = self.ix_activate(mandate_key);
+        self.send(&[ix], &[])
+    }
+
+    pub fn refund_unactivated(
+        &mut self,
+        sponsor: &Keypair,
+        mandate_key: &Pubkey,
+        sponsor_usdc: &Pubkey,
+    ) -> Sent {
+        let ix = self.ix_refund_unactivated(&sponsor.pubkey(), mandate_key, sponsor_usdc);
+        let signer = Keypair::new_from_array(*sponsor.secret_bytes());
+        self.send(&[ix], &[&signer])
+    }
+}

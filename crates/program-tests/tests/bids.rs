@@ -510,9 +510,9 @@ fn a_late_sponsor_cannot_award_even_to_a_bid_that_never_expires() {
     let mut w = world();
     let p = w.env.provider();
     w.env.submit_bid(&p, &w.mandate, 1, MAX, CUTOFF).unwrap();
+    // The cutoff is fixed at creation and stored, so the rule is exercised by writing the stored value.
     w.env
-        .update_account::<mandate::Mandate>(&w.mandate, |m| m.start_at = NOW + 1_000);
-    // cutoff is now NOW + 100
+        .update_account::<mandate::Mandate>(&w.mandate, |m| m.acceptance_cutoff = NOW + 100);
     w.env.warp_time(NOW + 101);
     assert_fails_with(
         w.env.accept_bid(

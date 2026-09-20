@@ -7,6 +7,10 @@ import {
   TOKEN_PROGRAM_ID,
   acceptAdmin,
   acceptBid,
+  activateMandate,
+  findPositionSetPda,
+  refundUnactivatedMandate,
+  registerPositions,
   cancelBid,
   closeBid,
   findBidPda,
@@ -208,6 +212,21 @@ describe("the TypeScript client agrees with the Rust program", () => {
     );
   });
 
+  it("encodes registration, activation and the unactivated refund", () => {
+    const provider = filled(14);
+    const mandate = findMandatePda(sponsor, 42n);
+    expect(findPositionSetPda(mandate).toBase58()).toBe(vectors.pdas["positionSet42"]);
+    expectMatch(
+      "register_positions",
+      registerPositions({ provider, mandate, positions: [filled(20), filled(21), filled(22)] }),
+    );
+    expectMatch("activate_mandate", activateMandate({ mandate }));
+    expectMatch(
+      "refund_unactivated_mandate",
+      refundUnactivatedMandate({ sponsor, sponsorUsdc: filled(13), mandate, usdcMint }),
+    );
+  });
+
   it("covers every instruction the Rust side produced a vector for", () => {
     expect(vectors.instructions.map((i) => i.instruction).sort()).toEqual(
       [
@@ -226,6 +245,9 @@ describe("the TypeScript client agrees with the Rust program", () => {
         "close_bid",
         "accept_bid",
         "withdraw_surplus_after_award",
+        "register_positions",
+        "activate_mandate",
+        "refund_unactivated_mandate",
       ].sort(),
     );
   });

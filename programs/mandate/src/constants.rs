@@ -13,6 +13,8 @@ pub const MANDATE_SEED: &[u8] = b"mandate";
 pub const VAULT_SEED: &[u8] = b"vault";
 #[constant]
 pub const BID_SEED: &[u8] = b"bid";
+#[constant]
+pub const POSITION_SET_SEED: &[u8] = b"position_set";
 
 /// USDC has 6 decimals. The protocol refuses any other reward mint.
 pub const USDC_DECIMALS: u8 = 6;
@@ -23,6 +25,9 @@ pub const OBSERVER_SET_VERSION: u8 = 1;
 pub const MARKET_VERSION: u8 = 1;
 pub const MANDATE_VERSION: u8 = 1;
 pub const BID_VERSION: u8 = 1;
+pub const POSITION_SET_VERSION: u8 = 1;
 
 /// Maximum observers, mirrored from `mandate_core` so account sizes are compile-time constants.
 pub const MAX_OBSERVERS: usize = mandate_core::MAX_OBSERVERS;
+/// Maximum registered positions, mirrored from `mandate_core` so account sizes are compile-time constants.
+pub const MAX_POSITIONS: usize = mandate_core::MAX_POSITIONS;

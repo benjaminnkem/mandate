@@ -22,6 +22,8 @@ export const DOMAIN_ERROR_CODES = [
   "InvalidObserverSet",
   "DuplicateObserver",
   "InvalidMarket",
+  "InvalidPositionSet",
+  "DuplicatePosition",
 ] as const;
 
 export type DomainErrorCode = (typeof DOMAIN_ERROR_CODES)[number];

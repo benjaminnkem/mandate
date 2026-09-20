@@ -37,6 +37,11 @@ pub struct Mandate {
     pub epoch_seconds: i64,
     pub total_epochs: u32,
     pub end_at: i64,
+    /// Last instant the sponsor may award (docs/adr/0009), fixed at creation from the protocol's parameters
+    /// then in force, so later protocol changes can never move a live mandate's deadlines.
+    pub acceptance_cutoff: i64,
+    /// Instant the provider's position set locks; registration is allowed strictly before it.
+    pub position_lock_at: i64,
 
     pub max_reward_raw: u64,
     pub accepted_reward_raw: u64,

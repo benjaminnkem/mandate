@@ -218,7 +218,10 @@ Out of scope v1. Create a new mandate or future top-up feature. Do not mutate re
 
 ### Provider disappears after award
 
-They simply fail future epochs and earn zero. Sponsor funds become refundable after epoch finalization/end according to rules.
+Two cases (ADR 0014):
+
+- **Never registers positions.** No epoch can ever be attested, so the mandate cannot start. After the position lock, with no position set, the sponsor may recover the entire vault with `refund_unactivated_mandate`. It is impossible while the provider can still register and impossible once any set exists.
+- **Registers, then stops performing.** The mandate activates; they fail future epochs and earn zero. Sponsor funds become refundable after epoch finalization/end according to the normal rules.
 
 No slashing in v1.
 

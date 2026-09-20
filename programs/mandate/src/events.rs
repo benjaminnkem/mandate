@@ -137,3 +137,31 @@ pub struct SponsorSurplusWithdrawn {
     pub total_withdrawn_raw: u64,
     pub vault_balance_raw: u64,
 }
+
+#[event]
+pub struct PositionSetRegistered {
+    pub position_set: Pubkey,
+    pub mandate: Pubkey,
+    pub provider: Pubkey,
+    pub positions: Vec<Pubkey>,
+    pub locked_at: i64,
+    /// True when this call replaced an earlier registration (only possible before the lock).
+    pub replaced: bool,
+}
+
+#[event]
+pub struct MandateActivated {
+    pub mandate: Pubkey,
+    pub position_set: Pubkey,
+    pub provider: Pubkey,
+    pub start_at: i64,
+    pub activated_at: i64,
+}
+
+#[event]
+pub struct UnactivatedMandateRefunded {
+    pub mandate: Pubkey,
+    pub sponsor: Pubkey,
+    /// Exact USDC returned: everything still in the vault.
+    pub refunded_raw: u64,
+}

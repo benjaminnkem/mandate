@@ -44,6 +44,9 @@ fn the_instruction_set_is_exactly_the_reviewed_one() {
         "close_bid",
         "accept_bid",
         "withdraw_surplus_after_award",
+        "register_positions",
+        "activate_mandate",
+        "refund_unactivated_mandate",
     ]
     .iter()
     .map(|s| s.to_string())
@@ -57,10 +60,11 @@ fn the_instruction_set_is_exactly_the_reviewed_one() {
 
 /// Instructions allowed to touch token accounts, each callable only by the sponsor. Extend this list
 /// deliberately (and review it) whenever a new fund-moving instruction is added.
-const FUND_MOVING: [&str; 3] = [
+const FUND_MOVING: [&str; 4] = [
     "create_mandate",
     "cancel_unawarded_mandate",
     "withdraw_surplus_after_award",
+    "refund_unactivated_mandate",
 ];
 
 #[test]
@@ -120,8 +124,12 @@ fn observer_sets_are_only_ever_written_by_their_creation_instruction() {
     }
 }
 
+/// Instructions deliberately callable by anyone: they need no signer beyond the transaction fee payer.
+/// Each must be harmless to run at the wrong moment, move no funds, and be safe if a hostile party calls it.
+const PERMISSIONLESS: [&str; 1] = ["activate_mandate"];
+
 #[test]
-fn every_admin_instruction_requires_a_signer() {
+fn every_instruction_requires_a_signer_unless_reviewed_as_permissionless() {
     let idl = idl();
     for instruction in idl["instructions"].as_array().unwrap() {
         let name = instruction["name"].as_str().unwrap();
@@ -131,7 +139,24 @@ fn every_admin_instruction_requires_a_signer() {
             .iter()
             .filter(|a| a["signer"].as_bool().unwrap_or(false))
             .count();
-        assert!(signers >= 1, "{name} has no signer at all");
+        if PERMISSIONLESS.contains(&name) {
+            assert_eq!(
+                signers, 0,
+                "{name} is reviewed as permissionless and must not require a signer account"
+            );
+            let accounts = account_names(instruction);
+            assert!(
+                !accounts
+                    .iter()
+                    .any(|a| a.contains("vault") || a.contains("usdc") || a.contains("token")),
+                "{name} is permissionless and so must not touch funds: {accounts:?}"
+            );
+        } else {
+            assert!(
+                signers >= 1,
+                "{name} has no signer and is not on the reviewed permissionless list"
+            );
+        }
     }
 }
 
@@ -150,6 +175,7 @@ fn account_types_are_the_reviewed_ones() {
         "MarketConfig",
         "Mandate",
         "Bid",
+        "PositionSet",
     ]
     .iter()
     .map(|s| s.to_string())

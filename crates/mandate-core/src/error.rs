@@ -21,11 +21,13 @@ pub enum MandateCoreError {
     InvalidObserverSet,
     DuplicateObserver,
     InvalidMarket,
+    InvalidPositionSet,
+    DuplicatePosition,
 }
 
 impl MandateCoreError {
     /// All variants, in declaration order.
-    pub const ALL: [MandateCoreError; 19] = [
+    pub const ALL: [MandateCoreError; 21] = [
         Self::ArithmeticOverflow,
         Self::DivisionByZero,
         Self::InvalidEpochLength,
@@ -45,6 +47,8 @@ impl MandateCoreError {
         Self::InvalidObserverSet,
         Self::DuplicateObserver,
         Self::InvalidMarket,
+        Self::InvalidPositionSet,
+        Self::DuplicatePosition,
     ];
 
     /// The stable code name shared with TypeScript and the golden vectors.
@@ -69,6 +73,8 @@ impl MandateCoreError {
             Self::InvalidObserverSet => "InvalidObserverSet",
             Self::DuplicateObserver => "DuplicateObserver",
             Self::InvalidMarket => "InvalidMarket",
+            Self::InvalidPositionSet => "InvalidPositionSet",
+            Self::DuplicatePosition => "DuplicatePosition",
         }
     }
 }

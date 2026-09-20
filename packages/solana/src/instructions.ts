@@ -7,6 +7,7 @@ import {
   findMandatePda,
   findMarketPda,
   findObserverSetPda,
+  findPositionSetPda,
   findProgramDataPda,
   findProtocolPda,
   findVaultPda,
@@ -299,6 +300,58 @@ export function withdrawSurplusAfterAward(
       sponsor: p.sponsor,
       protocol: findProtocolPda(pid(p)),
       mandate: p.mandate,
+      usdc_mint: p.usdcMint,
+      token_program: p.tokenProgram ?? TOKEN_PROGRAM_ID,
+      vault: findVaultPda(p.mandate, pid(p)),
+      sponsor_usdc: p.sponsorUsdc,
+    },
+    pid(p),
+  );
+}
+
+export function registerPositions(
+  p: Common & { provider: PublicKey; mandate: PublicKey; positions: readonly PublicKey[] },
+): TransactionInstruction {
+  return buildInstruction(
+    "register_positions",
+    { positions: [...p.positions] },
+    {
+      provider: p.provider,
+      protocol: findProtocolPda(pid(p)),
+      mandate: p.mandate,
+      position_set: findPositionSetPda(p.mandate, pid(p)),
+    },
+    pid(p),
+  );
+}
+
+/** Anyone may send this; the fee payer is the only signer required. */
+export function activateMandate(p: Common & { mandate: PublicKey }): TransactionInstruction {
+  return buildInstruction(
+    "activate_mandate",
+    {},
+    { mandate: p.mandate, position_set: findPositionSetPda(p.mandate, pid(p)) },
+    pid(p),
+  );
+}
+
+export function refundUnactivatedMandate(
+  p: Common & {
+    sponsor: PublicKey;
+    sponsorUsdc: PublicKey;
+    mandate: PublicKey;
+    usdcMint: PublicKey;
+    tokenProgram?: PublicKey;
+  },
+): TransactionInstruction {
+  return buildInstruction(
+    "refund_unactivated_mandate",
+    {},
+    {
+      sponsor: p.sponsor,
+      protocol: findProtocolPda(pid(p)),
+      mandate: p.mandate,
+      position_set: findPositionSetPda(p.mandate, pid(p)),
       usdc_mint: p.usdcMint,
       token_program: p.tokenProgram ?? TOKEN_PROGRAM_ID,
       vault: findVaultPda(p.mandate, pid(p)),

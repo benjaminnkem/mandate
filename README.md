@@ -57,15 +57,15 @@ as provider failure.
 
 ## Repository status
 
-Prompts 1 to 6 of [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md) are complete: the monorepo is scaffolded, the
+Prompts 1 to 7 of [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md) are complete: the monorepo is scaffolded, the
 domain and settlement math exist in TypeScript and Rust with shared golden vectors, and a deterministic measurement
 engine reproduces real PreStocks/USDC Meteora DLMM measurements byte for byte from a recorded mainnet snapshot (see
 [`docs/research/current-market.md`](docs/research/current-market.md) and
 [`docs/methodology/measurement-v1.md`](docs/methodology/measurement-v1.md)). The Anchor program has its protocol
 foundation (configuration, two-step admin transfer, new-risk pause, immutable observer sets, approved-market registry)
 sponsor mandates with atomic USDC escrow in a program-owned vault, open provider bidding, sponsor award with the exact
-per-epoch reward split, and surplus withdrawal. Positions, epochs and settlement do not exist yet, and no market is
-approved.
+per-epoch reward split, surplus withdrawal, the provider's locked position set and permissionless activation. Epoch
+attestation and settlement do not exist yet, and no market is approved.
 
 | Area | State |
 | --- | --- |
@@ -75,9 +75,9 @@ approved.
 | `packages/domain`, `crates/mandate-core` | integer money math, epoch/reward/compliance/accounting, validation (Prompt 2) |
 | `packages/solana` | IDL-driven TypeScript client, verified byte-for-byte against the Rust program (Prompt 5) |
 | `packages/db`, `packages/testkit` | empty shells |
-| `programs/mandate` | 15 instructions: protocol config, admin transfer, pause, observer sets, market registry, mandate + escrow, bidding, award, surplus withdrawal (Prompts 4-6) |
+| `programs/mandate` | 18 instructions: protocol config, admin transfer, pause, observer sets, market registry, mandate + escrow, bidding, award, surplus withdrawal, position set, activation, unactivated refund (Prompts 4-7) |
 | `crates/mandate-core` | pure settlement + protocol validation + fail-closed `LbPair` reader |
-| `crates/program-tests` | 121 LiteSVM tests executing the compiled SBF binary, plus Rust-generated client vectors |
+| `crates/program-tests` | 150 LiteSVM tests executing the compiled SBF binary, plus Rust-generated client vectors |
 | Architecture decisions | [`docs/adr/`](docs/adr/) |
 
 ## Toolchain
@@ -95,6 +95,7 @@ pnpm program:build      # cargo build-sbf + anchor idl build
 pnpm inspect:prestocks -- --symbol OPENAI
 pnpm market:discover -- --symbol OPENAI
 pnpm market:measure --pool <pool> --base-mint <mint> --provider <wallet> --positions <p1,p2>
+pnpm positions:inspect --pool <pool> --base-mint <mint> --provider <wallet> --positions <p1,p2>   # before registering
 ```
 
 The two `scripts` commands are read-only and need `SOLANA_RPC_HTTP_URL`. Program, observer, indexer and

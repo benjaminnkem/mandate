@@ -96,6 +96,9 @@ fn build() -> Value {
         .0
     };
     let provider = key(14);
+    let position_set = |m: &Pubkey| {
+        Pubkey::find_program_address(&[mandate::POSITION_SET_SEED, m.as_ref()], &program).0
+    };
     let init_args = mandate::InitializeProtocolArgs {
         admin,
         dlmm_program: key(9),
@@ -293,6 +296,45 @@ fn build() -> Value {
             }
             .data(),
         ),
+        case(
+            "register_positions",
+            mandate::accounts::RegisterPositions {
+                provider,
+                protocol,
+                mandate: m1,
+                position_set: position_set(&m1),
+                system_program: system,
+            }
+            .to_account_metas(None),
+            mandate::instruction::RegisterPositions {
+                positions: vec![key(20), key(21), key(22)],
+            }
+            .data(),
+        ),
+        case(
+            "activate_mandate",
+            mandate::accounts::ActivateMandate {
+                mandate: m1,
+                position_set: position_set(&m1),
+            }
+            .to_account_metas(None),
+            mandate::instruction::ActivateMandate {}.data(),
+        ),
+        case(
+            "refund_unactivated_mandate",
+            mandate::accounts::RefundUnactivatedMandate {
+                sponsor,
+                protocol,
+                mandate: m1,
+                position_set: position_set(&m1),
+                usdc_mint: usdc,
+                token_program: token,
+                vault: vault(&m1),
+                sponsor_usdc: key(13),
+            }
+            .to_account_metas(None),
+            mandate::instruction::RefundUnactivatedMandate {}.data(),
+        ),
     ];
 
     json!({
@@ -311,6 +353,7 @@ fn build() -> Value {
             "mandate42": m1.to_string(),
             "vault42": vault(&m1).to_string(),
             "bid42x14n3": bid(&provider, 3).to_string(),
+            "positionSet42": position_set(&m1).to_string(),
             "programData": program_data.to_string(),
         },
         "instructions": instructions,

@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 use mandate_core::reward::split_reward;
-use mandate_core::timing::acceptance_cutoff;
 
 use crate::constants::{BID_SEED, MANDATE_SEED, PROTOCOL_SEED};
 use crate::error::MandateError;
@@ -43,13 +42,10 @@ pub fn handle_accept_bid(ctx: Context<AcceptBid>) -> Result<()> {
     require!(bid.valid_until >= now, MandateError::BidExpired);
 
     let mandate = &mut ctx.accounts.mandate;
-    let cutoff = acceptance_cutoff(
-        mandate.start_at,
-        protocol.position_lock_buffer_seconds,
-        protocol.min_setup_window_seconds,
-    )
-    .map_err(MandateError::from)?;
-    require!(now <= cutoff, MandateError::AcceptanceClosed);
+    require!(
+        now <= mandate.acceptance_cutoff,
+        MandateError::AcceptanceClosed
+    );
 
     // Re-check the bounds the bid was validated against; the mandate's terms cannot have changed, but
     // acceptance must never depend on that assumption.

@@ -161,6 +161,91 @@
       "args": []
     },
     {
+      "name": "activate_mandate",
+      "docs": [
+        "Anyone: start an awarded mandate once its start time has arrived and positions are registered."
+      ],
+      "discriminator": [
+        56,
+        55,
+        16,
+        148,
+        225,
+        9,
+        136,
+        3
+      ],
+      "accounts": [
+        {
+          "name": "mandate",
+          "docs": [
+            "Anyone may activate: no sponsor or provider cooperation is required, so neither can hold the",
+            "mandate hostage. The transaction fee payer is the only signer needed."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate.sponsor",
+                "account": "Mandate"
+              },
+              {
+                "kind": "account",
+                "path": "mandate.mandate_id",
+                "account": "Mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "position_set",
+          "docs": [
+            "Must exist: a mandate cannot activate without registered positions. Its address is derived from",
+            "the mandate, so another mandate's set can never be substituted."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110,
+                  95,
+                  115,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "cancel_admin_transfer",
       "docs": [
         "Admin: withdraw a pending nomination."
@@ -899,6 +984,262 @@
       ]
     },
     {
+      "name": "refund_unactivated_mandate",
+      "docs": [
+        "Sponsor: recover the escrow of an awarded mandate whose provider never registered positions."
+      ],
+      "discriminator": [
+        227,
+        135,
+        184,
+        241,
+        14,
+        237,
+        196,
+        225
+      ],
+      "accounts": [
+        {
+          "name": "sponsor",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "mandate"
+          ]
+        },
+        {
+          "name": "protocol",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mandate",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate.sponsor",
+                "account": "Mandate"
+              },
+              {
+                "kind": "account",
+                "path": "mandate.mandate_id",
+                "account": "Mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "position_set",
+          "docs": [
+            "The position set PDA. It must NOT exist: proof that the provider never registered anything."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110,
+                  95,
+                  115,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sponsor_usdc",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "register_positions",
+      "docs": [
+        "Provider: register (or, before the lock, replace) the position accounts that will be measured."
+      ],
+      "discriminator": [
+        157,
+        120,
+        1,
+        93,
+        186,
+        67,
+        229,
+        235
+      ],
+      "accounts": [
+        {
+          "name": "provider",
+          "docs": [
+            "The accepted provider. Pays the position set's rent on first registration."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "protocol",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mandate",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate.sponsor",
+                "account": "Mandate"
+              },
+              {
+                "kind": "account",
+                "path": "mandate.mandate_id",
+                "account": "Mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "position_set",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110,
+                  95,
+                  115,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "positions",
+          "type": {
+            "vec": "pubkey"
+          }
+        }
+      ]
+    },
+    {
       "name": "set_market_enabled",
       "docs": [
         "Admin: enable or disable a market."
@@ -1415,6 +1756,19 @@
       ]
     },
     {
+      "name": "PositionSet",
+      "discriminator": [
+        250,
+        211,
+        23,
+        143,
+        209,
+        16,
+        38,
+        238
+      ]
+    },
+    {
       "name": "ProtocolConfig",
       "discriminator": [
         207,
@@ -1521,6 +1875,19 @@
       ]
     },
     {
+      "name": "MandateActivated",
+      "discriminator": [
+        169,
+        1,
+        206,
+        214,
+        221,
+        108,
+        57,
+        156
+      ]
+    },
+    {
       "name": "MandateCancelled",
       "discriminator": [
         124,
@@ -1599,6 +1966,19 @@
       ]
     },
     {
+      "name": "PositionSetRegistered",
+      "discriminator": [
+        46,
+        181,
+        250,
+        210,
+        75,
+        89,
+        82,
+        208
+      ]
+    },
+    {
       "name": "ProtocolInitialized",
       "discriminator": [
         173,
@@ -1622,6 +2002,19 @@
         104,
         226,
         196
+      ]
+    },
+    {
+      "name": "UnactivatedMandateRefunded",
+      "discriminator": [
+        58,
+        242,
+        141,
+        76,
+        251,
+        141,
+        137,
+        182
       ]
     }
   ],
@@ -1788,6 +2181,41 @@
     },
     {
       "code": 6032,
+      "name": "InvalidPositionSet",
+      "msg": "Position set is invalid"
+    },
+    {
+      "code": 6033,
+      "name": "DuplicatePosition",
+      "msg": "Position set contains a duplicate position"
+    },
+    {
+      "code": 6034,
+      "name": "PositionSetLocked",
+      "msg": "The position set is locked"
+    },
+    {
+      "code": 6035,
+      "name": "MandateNotStarted",
+      "msg": "The mandate has not started"
+    },
+    {
+      "code": 6036,
+      "name": "PositionWindowOpen",
+      "msg": "The provider can still register positions"
+    },
+    {
+      "code": 6037,
+      "name": "PositionSetExists",
+      "msg": "Positions were registered; the mandate can still activate"
+    },
+    {
+      "code": 6038,
+      "name": "PositionSetMissing",
+      "msg": "No positions were registered"
+    },
+    {
+      "code": 6039,
       "name": "Unexpected",
       "msg": "Unexpected settlement error"
     }
@@ -2252,6 +2680,21 @@
             "type": "i64"
           },
           {
+            "name": "acceptance_cutoff",
+            "docs": [
+              "Last instant the sponsor may award (docs/adr/0009), fixed at creation from the protocol's parameters",
+              "then in force, so later protocol changes can never move a live mandate's deadlines."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "position_lock_at",
+            "docs": [
+              "Instant the provider's position set locks; registration is allowed strictly before it."
+            ],
+            "type": "i64"
+          },
+          {
             "name": "max_reward_raw",
             "type": "u64"
           },
@@ -2352,6 +2795,34 @@
                 "name": "MandateStatus"
               }
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MandateActivated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "position_set",
+            "type": "pubkey"
+          },
+          {
+            "name": "provider",
+            "type": "pubkey"
+          },
+          {
+            "name": "start_at",
+            "type": "i64"
+          },
+          {
+            "name": "activated_at",
+            "type": "i64"
           }
         ]
       }
@@ -2739,6 +3210,98 @@
       }
     },
     {
+      "name": "PositionSet",
+      "docs": [
+        "The provider's registered Meteora position accounts for one mandate. PDA `[b\"position_set\", mandate]`.",
+        "",
+        "Mutable only before the mandate's `position_lock_at`; after that instant it can never change, so a",
+        "provider cannot swap which positions count after seeing a measurement. The program checks only the",
+        "shape of the set (bounded, unique, non-default). It makes NO claim that a key is a real DLMM position",
+        "or that the provider owns it: observers verify that against Meteora state and record the result."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "provider",
+            "type": "pubkey"
+          },
+          {
+            "name": "position_count",
+            "type": "u8"
+          },
+          {
+            "name": "positions",
+            "docs": [
+              "Unused slots are `Pubkey::default()`."
+            ],
+            "type": {
+              "array": [
+                "pubkey",
+                8
+              ]
+            }
+          },
+          {
+            "name": "locked_at",
+            "docs": [
+              "The lock instant (the mandate's `position_lock_at`), recorded for readers."
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PositionSetRegistered",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "position_set",
+            "type": "pubkey"
+          },
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "provider",
+            "type": "pubkey"
+          },
+          {
+            "name": "positions",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "locked_at",
+            "type": "i64"
+          },
+          {
+            "name": "replaced",
+            "docs": [
+              "True when this call replaced an earlier registration (only possible before the lock)."
+            ],
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
       "name": "ProtocolConfig",
       "docs": [
         "Global configuration. PDA `[b\"protocol\"]`. Holds protocol bounds and the admin identity.",
@@ -2911,6 +3474,29 @@
       }
     },
     {
+      "name": "UnactivatedMandateRefunded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "sponsor",
+            "type": "pubkey"
+          },
+          {
+            "name": "refunded_raw",
+            "docs": [
+              "Exact USDC returned: everything still in the vault."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "VenueType",
       "type": {
         "kind": "enum",
@@ -2942,6 +3528,11 @@
       "name": "OBSERVER_SET_SEED",
       "type": "bytes",
       "value": "[111, 98, 115, 101, 114, 118, 101, 114, 95, 115, 101, 116]"
+    },
+    {
+      "name": "POSITION_SET_SEED",
+      "type": "bytes",
+      "value": "[112, 111, 115, 105, 116, 105, 111, 110, 95, 115, 101, 116]"
     },
     {
       "name": "PROTOCOL_SEED",

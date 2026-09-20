@@ -158,3 +158,45 @@ fn observer_set_rejects_default_duplicate_and_admin_keys() {
         Err(MandateCoreError::InvalidObserverSet)
     );
 }
+
+use mandate_core::positions::validate_position_set;
+
+#[test]
+fn position_sets_are_bounded_nonempty_unique_and_nondefault() {
+    let k = |n: u8| [n; 32];
+    assert_eq!(validate_position_set(&[k(1)], 8), Ok(()));
+    let eight: Vec<[u8; 32]> = (1..=8).map(k).collect();
+    assert_eq!(validate_position_set(&eight, 8), Ok(()));
+    let nine: Vec<[u8; 32]> = (1..=9).map(k).collect();
+    assert_eq!(
+        validate_position_set(&nine, 8),
+        Err(MandateCoreError::InvalidPositionSet)
+    );
+    assert_eq!(
+        validate_position_set(&[], 8),
+        Err(MandateCoreError::InvalidPositionSet)
+    );
+    // a protocol that allows fewer than the hard cap
+    assert_eq!(
+        validate_position_set(&[k(1), k(2), k(3)], 2),
+        Err(MandateCoreError::InvalidPositionSet)
+    );
+    assert_eq!(validate_position_set(&[k(1), k(2)], 2), Ok(()));
+    // a protocol limit above the hard cap cannot lift it
+    assert_eq!(
+        validate_position_set(&nine, 200),
+        Err(MandateCoreError::InvalidPositionSet)
+    );
+    assert_eq!(
+        validate_position_set(&[[0u8; 32]], 8),
+        Err(MandateCoreError::InvalidPositionSet)
+    );
+    assert_eq!(
+        validate_position_set(&[k(1), k(2), k(1)], 8),
+        Err(MandateCoreError::DuplicatePosition)
+    );
+    assert_eq!(
+        validate_position_set(&[k(5), k(5)], 8),
+        Err(MandateCoreError::DuplicatePosition)
+    );
+}

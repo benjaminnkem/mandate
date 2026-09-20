@@ -69,6 +69,20 @@ pub enum MandateError {
     NothingToWithdraw,
     #[msg("Withdrawal exceeds the amount available to the sponsor")]
     WithdrawExceedsAvailable,
+    #[msg("Position set is invalid")]
+    InvalidPositionSet,
+    #[msg("Position set contains a duplicate position")]
+    DuplicatePosition,
+    #[msg("The position set is locked")]
+    PositionSetLocked,
+    #[msg("The mandate has not started")]
+    MandateNotStarted,
+    #[msg("The provider can still register positions")]
+    PositionWindowOpen,
+    #[msg("Positions were registered; the mandate can still activate")]
+    PositionSetExists,
+    #[msg("No positions were registered")]
+    PositionSetMissing,
     #[msg("Unexpected settlement error")]
     Unexpected,
 }
@@ -86,6 +100,8 @@ impl From<MandateCoreError> for MandateError {
             MandateCoreError::TooManyEpochs => Self::TooManyEpochs,
             MandateCoreError::InvalidBudget => Self::InvalidBudget,
             MandateCoreError::BidExpired => Self::BidExpired,
+            MandateCoreError::InvalidPositionSet => Self::InvalidPositionSet,
+            MandateCoreError::DuplicatePosition => Self::DuplicatePosition,
             MandateCoreError::NothingToWithdraw => Self::NothingToWithdraw,
             MandateCoreError::WithdrawExceedsAvailable => Self::WithdrawExceedsAvailable,
             MandateCoreError::InvalidThreshold => Self::InvalidThreshold,

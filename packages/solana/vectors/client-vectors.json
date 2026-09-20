@@ -429,6 +429,99 @@
       ],
       "dataHex": "b1acf44115565a39ffe0f50500000000",
       "instruction": "withdraw_surplus_after_award"
+    },
+    {
+      "accounts": [
+        {
+          "isSigner": true,
+          "isWritable": true,
+          "pubkey": "ws91DX9HBAAxGW77BZs5FogRDwpRtcUpiLBpKdPTfWu"
+        },
+        {
+          "isSigner": false,
+          "isWritable": false,
+          "pubkey": "CTfXXGMBPdKx9TuuiCA5gXFPiguzm8NQTtup6xbC89cb"
+        },
+        {
+          "isSigner": false,
+          "isWritable": false,
+          "pubkey": "Hko62ZEZ9eMywyW5WeZBkZ5wp4H4M46dn3v9jbFL5B8w"
+        },
+        {
+          "isSigner": false,
+          "isWritable": true,
+          "pubkey": "71sUYt4KEze3PSV2NBZSozQfcHokGgGrEHy8WXcyu76"
+        },
+        {
+          "isSigner": false,
+          "isWritable": false,
+          "pubkey": "11111111111111111111111111111111"
+        }
+      ],
+      "dataHex": "9d78015dba43e5eb03000000141414141414141414141414141414141414141414141414141414141414141415151515151515151515151515151515151515151515151515151515151515151616161616161616161616161616161616161616161616161616161616161616",
+      "instruction": "register_positions"
+    },
+    {
+      "accounts": [
+        {
+          "isSigner": false,
+          "isWritable": true,
+          "pubkey": "Hko62ZEZ9eMywyW5WeZBkZ5wp4H4M46dn3v9jbFL5B8w"
+        },
+        {
+          "isSigner": false,
+          "isWritable": false,
+          "pubkey": "71sUYt4KEze3PSV2NBZSozQfcHokGgGrEHy8WXcyu76"
+        }
+      ],
+      "dataHex": "38371094e1098803",
+      "instruction": "activate_mandate"
+    },
+    {
+      "accounts": [
+        {
+          "isSigner": true,
+          "isWritable": true,
+          "pubkey": "4vJ9JU1bJJE96FWSJKvHsmmFADCg4gpZQff4P3bkLKi"
+        },
+        {
+          "isSigner": false,
+          "isWritable": false,
+          "pubkey": "CTfXXGMBPdKx9TuuiCA5gXFPiguzm8NQTtup6xbC89cb"
+        },
+        {
+          "isSigner": false,
+          "isWritable": true,
+          "pubkey": "Hko62ZEZ9eMywyW5WeZBkZ5wp4H4M46dn3v9jbFL5B8w"
+        },
+        {
+          "isSigner": false,
+          "isWritable": false,
+          "pubkey": "71sUYt4KEze3PSV2NBZSozQfcHokGgGrEHy8WXcyu76"
+        },
+        {
+          "isSigner": false,
+          "isWritable": false,
+          "pubkey": "LbUiWL3xVV8hTFYBVdbTNrpDo41NKS6o3LHHuDzjfcY"
+        },
+        {
+          "isSigner": false,
+          "isWritable": false,
+          "pubkey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "isSigner": false,
+          "isWritable": true,
+          "pubkey": "H4r1Z1qvRMSVSm4bcUwYhwaaFMSEdGxzndAruEfr8RgB"
+        },
+        {
+          "isSigner": false,
+          "isWritable": true,
+          "pubkey": "swqrv48gsrwpBFbftEwnP2vB4jckpvfGJfXkwaniLCC"
+        }
+      ],
+      "dataHex": "e387b8f10eedc4e1",
+      "instruction": "refund_unactivated_mandate"
     }
   ],
   "keys": {
@@ -445,6 +538,7 @@
     "market": "GFg5hNF5YumB4NWkNyc9Cgkfv8XRuDmp1Y39ZNzVBSsR",
     "observerSetV1": "CwbMDE5vvMQ59tXnTkadGwRwXWF9APoxBdfQSg1aNyBE",
     "observerSetV2": "EyEtWaqKFumPfjF9arWaumBdfG8d6r6SxKfRSSYrj4im",
+    "positionSet42": "71sUYt4KEze3PSV2NBZSozQfcHokGgGrEHy8WXcyu76",
     "programData": "GUdEjpaagLZ8sS1HspDNH6GpMM2bcGyX5rYwp7yY3UpC",
     "protocol": "CTfXXGMBPdKx9TuuiCA5gXFPiguzm8NQTtup6xbC89cb",
     "vault42": "H4r1Z1qvRMSVSm4bcUwYhwaaFMSEdGxzndAruEfr8RgB"

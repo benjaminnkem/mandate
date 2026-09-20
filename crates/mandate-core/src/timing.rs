@@ -158,3 +158,13 @@ pub fn acceptance_cutoff(
         .ok_or(MandateCoreError::ArithmeticOverflow)?;
     narrow_i64(cutoff)
 }
+
+/// The instant the provider's position set locks: `start_at - lock_buffer`. Registration is allowed
+/// strictly before it and never after (docs/TECHNICAL_SPEC.md section 5.8).
+pub fn position_lock_at(start_at: i64, position_lock_buffer_seconds: i64) -> Result<i64> {
+    narrow_i64(
+        i128::from(start_at)
+            .checked_sub(i128::from(position_lock_buffer_seconds))
+            .ok_or(MandateCoreError::ArithmeticOverflow)?,
+    )
+}

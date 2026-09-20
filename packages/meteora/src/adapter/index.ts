@@ -1,6 +1,7 @@
 export * from "./clock.ts";
 export * from "./dlmm-engine.ts";
 export * from "./errors.ts";
+export * from "./inspect.ts";
 export * from "./mint-state.ts";
 export * from "./observe.ts";
 export * from "./pool.ts";

@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
-use mandate_core::timing::{build_schedule, ScheduleBounds};
+use mandate_core::timing::{acceptance_cutoff, build_schedule, position_lock_at, ScheduleBounds};
 use mandate_core::validation::{validate_create_mandate, CreateMandateParams, ProtocolLimits};
 
 use crate::constants::{
@@ -164,6 +164,15 @@ pub fn handle_create_mandate(ctx: Context<CreateMandate>, args: CreateMandateArg
     mandate.epoch_seconds = schedule.epoch_seconds;
     mandate.total_epochs = schedule.total_epochs;
     mandate.end_at = schedule.end_at;
+    mandate.acceptance_cutoff = acceptance_cutoff(
+        schedule.start_at,
+        protocol.position_lock_buffer_seconds,
+        protocol.min_setup_window_seconds,
+    )
+    .map_err(MandateError::from)?;
+    mandate.position_lock_at =
+        position_lock_at(schedule.start_at, protocol.position_lock_buffer_seconds)
+            .map_err(MandateError::from)?;
     mandate.max_reward_raw = args.max_reward_raw;
     mandate.accepted_reward_raw = 0;
     mandate.base_epoch_reward_raw = 0;

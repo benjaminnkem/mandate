@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use mandate_core::timing::acceptance_cutoff;
 use mandate_core::validation::{validate_bid, BidParams};
 
 use crate::constants::{BID_SEED, BID_VERSION, MANDATE_SEED, PROTOCOL_SEED};
@@ -43,25 +42,21 @@ pub fn handle_submit_bid(
     requested_reward_raw: u64,
     valid_until: i64,
 ) -> Result<()> {
-    let protocol = &ctx.accounts.protocol;
     let mandate = &ctx.accounts.mandate;
-    require!(!protocol.paused_new_risk, MandateError::ProtocolPaused);
+    require!(
+        !ctx.accounts.protocol.paused_new_risk,
+        MandateError::ProtocolPaused
+    );
     let now = Clock::get()?.unix_timestamp;
     require!(now < mandate.bidding_ends_at, MandateError::BiddingClosed);
 
-    let cutoff = acceptance_cutoff(
-        mandate.start_at,
-        protocol.position_lock_buffer_seconds,
-        protocol.min_setup_window_seconds,
-    )
-    .map_err(MandateError::from)?;
     let problems = validate_bid(&BidParams {
         requested_reward_raw,
         valid_until,
         max_reward_raw: mandate.max_reward_raw,
         now,
         total_epochs: mandate.total_epochs,
-        acceptance_cutoff: cutoff,
+        acceptance_cutoff: mandate.acceptance_cutoff,
     });
     if let Some(problem) = problems.first() {
         return Err(MandateError::from(problem).into());
