@@ -7,3 +7,4 @@ coverage
 pnpm-lock.yaml
 docs/evidence
 .keys
+packages/domain/vectors

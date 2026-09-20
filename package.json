@@ -13,7 +13,9 @@
     "rust:lint": "cargo clippy --workspace --all-targets -- -D warnings",
     "rust:test": "cargo test --workspace",
     "program:build": "anchor build",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm rust:fmt && pnpm rust:lint && pnpm rust:test"
+    "check": "pnpm format:check && pnpm vectors:check && pnpm lint && pnpm typecheck && pnpm test && pnpm rust:fmt && pnpm rust:lint && pnpm rust:test",
+    "vectors:check": "python3 packages/domain/vectors/generate_golden.py --check",
+    "vectors:generate": "python3 packages/domain/vectors/generate_golden.py"
   },
   "devDependencies": {
     "prettier": "3.9.6",

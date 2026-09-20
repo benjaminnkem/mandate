@@ -238,6 +238,11 @@ pub struct ProtocolConfig {
     pub max_spread_bps: u32,
     pub max_depth_band_bps: u32,
     pub max_positions: u8,
+    pub min_probe_quote_raw: u64,
+    pub max_probe_quote_raw: u64,
+    pub min_start_lead_seconds: i64,
+    pub position_lock_buffer_seconds: i64,
+    pub min_setup_window_seconds: i64,
     pub unavailable_recovery_seconds: i64,
     pub current_observer_set_version: u32,
 }
@@ -379,6 +384,9 @@ pub struct Mandate {
     pub unavailable_epochs: u32,
     pub finalized_epochs: u32,
     pub earned_reward_raw: u64,
+    /// Sum of rewards of epochs finalized NonCompliant or Unavailable. Needed to derive the
+    /// unresolved amount exactly because the final epoch carries the remainder.
+    pub forfeited_reward_raw: u64,
     pub claimed_reward_raw: u64,
     pub sponsor_withdrawn_raw: u64,
     pub status: MandateStatus,
@@ -1130,6 +1138,19 @@ max_reward_raw
 ```
 
 Implement this from invariants, not duplicated ad-hoc branches.
+
+The reference implementation is `crates/mandate-core` (Rust) and `packages/domain` (TypeScript),
+verified against shared golden vectors from an independent oracle (ADR 0009):
+
+```text
+earned + forfeited + unresolved == accepted
+claimed <= earned <= accepted <= max
+vault == max - claimed - sponsor_withdrawn
+sponsor_withdrawable == (max - accepted) + (all epochs resolved ? accepted - earned : 0) - sponsor_withdrawn
+```
+
+Forfeited rewards are released to the sponsor only once **every** epoch is resolved (literal reading of
+section 6.15), never per epoch.
 
 ---
 
