@@ -39,6 +39,11 @@ fn the_instruction_set_is_exactly_the_reviewed_one() {
         "set_market_enabled",
         "create_mandate",
         "cancel_unawarded_mandate",
+        "submit_bid",
+        "cancel_bid",
+        "close_bid",
+        "accept_bid",
+        "withdraw_surplus_after_award",
     ]
     .iter()
     .map(|s| s.to_string())
@@ -52,7 +57,11 @@ fn the_instruction_set_is_exactly_the_reviewed_one() {
 
 /// Instructions allowed to touch token accounts, each callable only by the sponsor. Extend this list
 /// deliberately (and review it) whenever a new fund-moving instruction is added.
-const FUND_MOVING: [&str; 2] = ["create_mandate", "cancel_unawarded_mandate"];
+const FUND_MOVING: [&str; 3] = [
+    "create_mandate",
+    "cancel_unawarded_mandate",
+    "withdraw_surplus_after_award",
+];
 
 #[test]
 fn only_reviewed_instructions_touch_tokens_and_none_takes_an_admin() {
@@ -85,7 +94,8 @@ fn only_reviewed_instructions_touch_tokens_and_none_takes_an_admin() {
         }
         let _ = touches_tokens;
         assert!(
-            !name.contains("withdraw") && !name.contains("sweep") && !name.contains("seize"),
+            FUND_MOVING.contains(&name)
+                || !(name.contains("withdraw") || name.contains("sweep") || name.contains("seize")),
             "{name} looks like an unreviewed fund-moving instruction"
         );
     }
@@ -134,10 +144,16 @@ fn account_types_are_the_reviewed_ones() {
         .iter()
         .map(|a| a["name"].as_str().unwrap().to_string())
         .collect();
-    let expected: BTreeSet<String> = ["ProtocolConfig", "ObserverSet", "MarketConfig", "Mandate"]
-        .iter()
-        .map(|s| s.to_string())
-        .collect();
+    let expected: BTreeSet<String> = [
+        "ProtocolConfig",
+        "ObserverSet",
+        "MarketConfig",
+        "Mandate",
+        "Bid",
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
     assert_eq!(accounts, expected);
 }
 

@@ -6,6 +6,12 @@ import {
   MANDATE_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   acceptAdmin,
+  acceptBid,
+  cancelBid,
+  closeBid,
+  findBidPda,
+  submitBid,
+  withdrawSurplusAfterAward,
   buildInstruction,
   cancelAdminTransfer,
   cancelUnawardedMandate,
@@ -173,6 +179,35 @@ describe("the TypeScript client agrees with the Rust program", () => {
     );
   });
 
+  it("encodes the bidding and award instructions", () => {
+    const provider = filled(14);
+    const mandate = findMandatePda(sponsor, 42n);
+    expect(findBidPda(mandate, provider, 3n).toBase58()).toBe(vectors.pdas["bid42x14n3"]);
+    expectMatch(
+      "submit_bid",
+      submitBid({
+        provider,
+        mandate,
+        nonce: 3n,
+        requestedRewardRaw: 900_000_001n,
+        validUntil: 1_789_926_836n,
+      }),
+    );
+    expectMatch("cancel_bid", cancelBid({ provider, mandate, nonce: 3n }));
+    expectMatch("close_bid", closeBid({ provider, mandate, nonce: 3n }));
+    expectMatch("accept_bid", acceptBid({ sponsor, mandate, provider, nonce: 3n }));
+    expectMatch(
+      "withdraw_surplus_after_award",
+      withdrawSurplusAfterAward({
+        sponsor,
+        sponsorUsdc: filled(13),
+        mandate,
+        usdcMint,
+        amountRaw: 99_999_999n,
+      }),
+    );
+  });
+
   it("covers every instruction the Rust side produced a vector for", () => {
     expect(vectors.instructions.map((i) => i.instruction).sort()).toEqual(
       [
@@ -186,6 +221,11 @@ describe("the TypeScript client agrees with the Rust program", () => {
         "set_market_enabled",
         "set_paused_new_risk",
         "upsert_market",
+        "submit_bid",
+        "cancel_bid",
+        "close_bid",
+        "accept_bid",
+        "withdraw_surplus_after_award",
       ].sort(),
     );
   });

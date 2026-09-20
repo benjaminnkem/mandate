@@ -44,3 +44,11 @@ export const findVaultPda = (mandate: PublicKey, programId = MANDATE_PROGRAM_ID)
 /** The program's upgradeable-loader ProgramData account (its upgrade authority gates initialisation). */
 export const findProgramDataPda = (programId = MANDATE_PROGRAM_ID): PublicKey =>
   derive([programId.toBytes()], BPF_LOADER_UPGRADEABLE_ID);
+
+export const findBidPda = (
+  mandate: PublicKey,
+  provider: PublicKey,
+  nonce: bigint,
+  programId = MANDATE_PROGRAM_ID,
+): PublicKey =>
+  derive([utf8("bid"), mandate.toBytes(), provider.toBytes(), u64le(nonce)], programId);

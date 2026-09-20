@@ -217,6 +217,23 @@ def timing_cases():
     return {"positions": positions, "bounds": bnds}
 
 
+# ---------------------------------------------------------------- acceptance cutoff
+def cutoff_case(start, lock_buffer, setup_window):
+    cutoff = start - lock_buffer - setup_window
+    out = {"start_at": s(start), "position_lock_buffer_seconds": s(lock_buffer), "min_setup_window_seconds": s(setup_window)}
+    out["expect"] = {"ok": s(cutoff)} if I64_MIN <= cutoff <= I64_MAX else {"err": "ArithmeticOverflow"}
+    return out
+
+
+def acceptance_cutoff_cases():
+    T = 1_800_000_000
+    return [cutoff_case(*c) for c in [
+        (T, 300, 600), (T, 0, 0), (T, 300, 0), (T, 0, 600), (0, 300, 600), (-5, 300, 600),
+        (I64_MIN + 900, 300, 600), (I64_MIN + 899, 300, 600), (I64_MAX, 0, 0), (I64_MAX, I64_MIN, 0),
+        (I64_MAX, 0, I64_MIN), (I64_MIN, 1, 0), (I64_MIN, 0, 0), (1, 1, 1),
+    ]]
+
+
 # ---------------------------------------------------------------- compliance
 NAMES = ["SpreadTooWide", "PoolBuyDepthTooLow", "PoolSellDepthTooLow", "ProviderQuoteInBandTooLow", "ProviderBaseInBandTooLow"]
 
@@ -520,6 +537,7 @@ def build():
         "reward_split": reward_split_cases(),
         "schedule": schedule_cases(),
         "timing": timing_cases(),
+        "acceptance_cutoff": acceptance_cutoff_cases(),
         "compliance": compliance_cases(),
         "accounting": accounting_scenarios(),
         "validation": validation_cases(),

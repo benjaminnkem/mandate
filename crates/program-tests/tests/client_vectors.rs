@@ -83,6 +83,19 @@ fn build() -> Value {
         min_provider_base_quote_eq_in_band_raw: 5_000_000_000,
         probe_quote_raw: 10_000_000,
     };
+    let bid = |provider: &Pubkey, nonce: u64| {
+        Pubkey::find_program_address(
+            &[
+                mandate::BID_SEED,
+                m1.as_ref(),
+                provider.as_ref(),
+                &nonce.to_le_bytes(),
+            ],
+            &program,
+        )
+        .0
+    };
+    let provider = key(14);
     let init_args = mandate::InitializeProtocolArgs {
         admin,
         dlmm_program: key(9),
@@ -216,6 +229,70 @@ fn build() -> Value {
             .to_account_metas(None),
             mandate::instruction::CancelUnawardedMandate {}.data(),
         ),
+        case(
+            "submit_bid",
+            mandate::accounts::SubmitBid {
+                provider,
+                protocol,
+                mandate: m1,
+                bid: bid(&provider, 3),
+                system_program: system,
+            }
+            .to_account_metas(None),
+            mandate::instruction::SubmitBid {
+                nonce: 3,
+                requested_reward_raw: 900_000_001,
+                valid_until: 1_789_926_836,
+            }
+            .data(),
+        ),
+        case(
+            "cancel_bid",
+            mandate::accounts::CancelBid {
+                provider,
+                bid: bid(&provider, 3),
+            }
+            .to_account_metas(None),
+            mandate::instruction::CancelBid {}.data(),
+        ),
+        case(
+            "close_bid",
+            mandate::accounts::CloseBid {
+                provider,
+                bid: bid(&provider, 3),
+                mandate: m1,
+            }
+            .to_account_metas(None),
+            mandate::instruction::CloseBid {}.data(),
+        ),
+        case(
+            "accept_bid",
+            mandate::accounts::AcceptBid {
+                sponsor,
+                protocol,
+                mandate: m1,
+                bid: bid(&provider, 3),
+            }
+            .to_account_metas(None),
+            mandate::instruction::AcceptBid {}.data(),
+        ),
+        case(
+            "withdraw_surplus_after_award",
+            mandate::accounts::WithdrawSurplusAfterAward {
+                sponsor,
+                protocol,
+                mandate: m1,
+                usdc_mint: usdc,
+                token_program: token,
+                vault: vault(&m1),
+                sponsor_usdc: key(13),
+            }
+            .to_account_metas(None),
+            mandate::instruction::WithdrawSurplusAfterAward {
+                amount_raw: 99_999_999,
+            }
+            .data(),
+        ),
     ];
 
     json!({
@@ -233,6 +310,7 @@ fn build() -> Value {
             "market": market(&pool).to_string(),
             "mandate42": m1.to_string(),
             "vault42": vault(&m1).to_string(),
+            "bid42x14n3": bid(&provider, 3).to_string(),
             "programData": program_data.to_string(),
         },
         "instructions": instructions,

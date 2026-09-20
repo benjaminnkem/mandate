@@ -143,3 +143,18 @@ pub fn epoch_bounds(
         recovery_deadline: narrow_i64(recovery_deadline)?,
     })
 }
+
+/// The last instant a sponsor can still accept a bid: `start_at - lock_buffer - setup_window`. Accepting
+/// no later than this leaves the provider at least the protocol's setup window before the position set
+/// locks (docs/adr/0009). Checked: never wraps.
+pub fn acceptance_cutoff(
+    start_at: i64,
+    position_lock_buffer_seconds: i64,
+    min_setup_window_seconds: i64,
+) -> Result<i64> {
+    let cutoff = i128::from(start_at)
+        .checked_sub(i128::from(position_lock_buffer_seconds))
+        .and_then(|value| value.checked_sub(i128::from(min_setup_window_seconds)))
+        .ok_or(MandateCoreError::ArithmeticOverflow)?;
+    narrow_i64(cutoff)
+}

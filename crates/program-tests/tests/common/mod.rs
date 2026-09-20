@@ -650,3 +650,201 @@ impl Env {
         self.send(&[ix], &[&signer])
     }
 }
+
+// ---- bids and award (Prompt 6) ---------------------------------------------------------------
+
+pub fn bid_pda(mandate_key: &Pubkey, provider: &Pubkey, nonce: u64) -> Pubkey {
+    Pubkey::find_program_address(
+        &[
+            mandate::BID_SEED,
+            mandate_key.as_ref(),
+            provider.as_ref(),
+            &nonce.to_le_bytes(),
+        ],
+        &mandate::ID,
+    )
+    .0
+}
+
+impl Env {
+    pub fn provider(&mut self) -> Keypair {
+        let provider = keypair();
+        self.svm
+            .airdrop(&provider.pubkey(), 10_000_000_000)
+            .unwrap();
+        provider
+    }
+
+    pub fn ix_submit_bid(
+        &self,
+        provider: &Pubkey,
+        mandate_key: &Pubkey,
+        nonce: u64,
+        requested: u64,
+        valid_until: i64,
+    ) -> Instruction {
+        self.ix_submit_bid_with(
+            provider,
+            mandate_key,
+            bid_pda(mandate_key, provider, nonce),
+            nonce,
+            requested,
+            valid_until,
+        )
+    }
+
+    pub fn ix_submit_bid_with(
+        &self,
+        provider: &Pubkey,
+        mandate_key: &Pubkey,
+        bid: Pubkey,
+        nonce: u64,
+        requested: u64,
+        valid_until: i64,
+    ) -> Instruction {
+        Instruction {
+            program_id: mandate::ID,
+            accounts: mandate::accounts::SubmitBid {
+                provider: *provider,
+                protocol: protocol_pda(),
+                mandate: *mandate_key,
+                bid,
+                system_program: pk(SYSTEM_PROGRAM),
+            }
+            .to_account_metas(None),
+            data: mandate::instruction::SubmitBid {
+                nonce,
+                requested_reward_raw: requested,
+                valid_until,
+            }
+            .data(),
+        }
+    }
+
+    pub fn ix_cancel_bid(&self, provider: &Pubkey, bid: &Pubkey) -> Instruction {
+        Instruction {
+            program_id: mandate::ID,
+            accounts: mandate::accounts::CancelBid {
+                provider: *provider,
+                bid: *bid,
+            }
+            .to_account_metas(None),
+            data: mandate::instruction::CancelBid {}.data(),
+        }
+    }
+
+    pub fn ix_close_bid(
+        &self,
+        provider: &Pubkey,
+        bid: &Pubkey,
+        mandate_key: &Pubkey,
+    ) -> Instruction {
+        Instruction {
+            program_id: mandate::ID,
+            accounts: mandate::accounts::CloseBid {
+                provider: *provider,
+                bid: *bid,
+                mandate: *mandate_key,
+            }
+            .to_account_metas(None),
+            data: mandate::instruction::CloseBid {}.data(),
+        }
+    }
+
+    pub fn ix_accept_bid(
+        &self,
+        sponsor: &Pubkey,
+        mandate_key: &Pubkey,
+        bid: &Pubkey,
+    ) -> Instruction {
+        Instruction {
+            program_id: mandate::ID,
+            accounts: mandate::accounts::AcceptBid {
+                sponsor: *sponsor,
+                protocol: protocol_pda(),
+                mandate: *mandate_key,
+                bid: *bid,
+            }
+            .to_account_metas(None),
+            data: mandate::instruction::AcceptBid {}.data(),
+        }
+    }
+
+    pub fn ix_withdraw_surplus(
+        &self,
+        sponsor: &Pubkey,
+        mandate_key: &Pubkey,
+        sponsor_usdc: &Pubkey,
+        amount: u64,
+    ) -> Instruction {
+        Instruction {
+            program_id: mandate::ID,
+            accounts: mandate::accounts::WithdrawSurplusAfterAward {
+                sponsor: *sponsor,
+                protocol: protocol_pda(),
+                mandate: *mandate_key,
+                usdc_mint: self.usdc_mint,
+                token_program: pk(SPL_TOKEN),
+                vault: vault_pda(mandate_key),
+                sponsor_usdc: *sponsor_usdc,
+            }
+            .to_account_metas(None),
+            data: mandate::instruction::WithdrawSurplusAfterAward { amount_raw: amount }.data(),
+        }
+    }
+
+    fn signed(&mut self, ixs: &[Instruction], signer: &Keypair) -> Sent {
+        let signer = Keypair::new_from_array(*signer.secret_bytes());
+        self.send(ixs, &[&signer])
+    }
+
+    pub fn submit_bid(
+        &mut self,
+        provider: &Keypair,
+        mandate_key: &Pubkey,
+        nonce: u64,
+        requested: u64,
+        valid_until: i64,
+    ) -> Sent {
+        let ix = self.ix_submit_bid(
+            &provider.pubkey(),
+            mandate_key,
+            nonce,
+            requested,
+            valid_until,
+        );
+        self.signed(&[ix], provider)
+    }
+    pub fn cancel_bid(&mut self, provider: &Keypair, bid: &Pubkey) -> Sent {
+        let ix = self.ix_cancel_bid(&provider.pubkey(), bid);
+        self.signed(&[ix], provider)
+    }
+    pub fn close_bid(&mut self, provider: &Keypair, bid: &Pubkey, mandate_key: &Pubkey) -> Sent {
+        let ix = self.ix_close_bid(&provider.pubkey(), bid, mandate_key);
+        self.signed(&[ix], provider)
+    }
+    pub fn accept_bid(&mut self, sponsor: &Keypair, mandate_key: &Pubkey, bid: &Pubkey) -> Sent {
+        let ix = self.ix_accept_bid(&sponsor.pubkey(), mandate_key, bid);
+        self.signed(&[ix], sponsor)
+    }
+    pub fn withdraw_surplus(
+        &mut self,
+        sponsor: &Keypair,
+        mandate_key: &Pubkey,
+        sponsor_usdc: &Pubkey,
+        amount: u64,
+    ) -> Sent {
+        let ix = self.ix_withdraw_surplus(&sponsor.pubkey(), mandate_key, sponsor_usdc, amount);
+        self.signed(&[ix], sponsor)
+    }
+}
+
+/// Convenience: an owned copy of a keypair's public identity for passing where an owned key is needed.
+pub trait SignerCopy {
+    fn pubkey_owned(&self) -> solana_keypair::Keypair;
+}
+impl SignerCopy for solana_keypair::Keypair {
+    fn pubkey_owned(&self) -> solana_keypair::Keypair {
+        solana_keypair::Keypair::new_from_array(*self.secret_bytes())
+    }
+}

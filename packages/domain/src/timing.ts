@@ -91,3 +91,16 @@ export function epochBounds(
   const epochEnd = epochStart + schedule.epochSeconds;
   return { epochStart, epochEnd, recoveryDeadline: asI64(epochEnd + unavailableRecoverySeconds) };
 }
+
+/**
+ * The last instant a sponsor can still accept a bid: `startAt - lockBuffer - setupWindow`. Accepting no later
+ * than this leaves the provider at least the protocol's setup window before the position set locks
+ * (docs/adr/0009). Throws `ArithmeticOverflow` rather than leaving the i64 range.
+ */
+export function acceptanceCutoff(
+  startAt: bigint,
+  positionLockBufferSeconds: bigint,
+  minSetupWindowSeconds: bigint,
+): bigint {
+  return asI64(startAt - positionLockBufferSeconds - minSetupWindowSeconds);
+}

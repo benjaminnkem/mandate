@@ -49,6 +49,26 @@ pub enum MandateError {
     BidAlreadyAccepted,
     #[msg("Reward vault does not hold the expected balance")]
     VaultMismatch,
+    #[msg("Bidding has closed")]
+    BiddingClosed,
+    #[msg("The acceptance deadline has passed")]
+    AcceptanceClosed,
+    #[msg("Bid has expired")]
+    BidExpired,
+    #[msg("Bid is not active")]
+    BidNotActive,
+    #[msg("Bid cannot be closed yet")]
+    BidNotClosable,
+    #[msg("Bid does not belong to this mandate")]
+    BidMismatch,
+    #[msg("Signer is not the bid's provider")]
+    UnauthorizedProvider,
+    #[msg("Mandate has not been awarded")]
+    MandateNotAwarded,
+    #[msg("Nothing to withdraw")]
+    NothingToWithdraw,
+    #[msg("Withdrawal exceeds the amount available to the sponsor")]
+    WithdrawExceedsAvailable,
     #[msg("Unexpected settlement error")]
     Unexpected,
 }
@@ -65,6 +85,9 @@ impl From<MandateCoreError> for MandateError {
             MandateCoreError::InvalidEpochLength => Self::InvalidEpochLength,
             MandateCoreError::TooManyEpochs => Self::TooManyEpochs,
             MandateCoreError::InvalidBudget => Self::InvalidBudget,
+            MandateCoreError::BidExpired => Self::BidExpired,
+            MandateCoreError::NothingToWithdraw => Self::NothingToWithdraw,
+            MandateCoreError::WithdrawExceedsAvailable => Self::WithdrawExceedsAvailable,
             MandateCoreError::InvalidThreshold => Self::InvalidThreshold,
             _ => Self::Unexpected,
         }

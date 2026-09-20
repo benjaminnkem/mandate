@@ -20,6 +20,7 @@ import {
   splitReward,
   subU64,
   buildSchedule,
+  acceptanceCutoff,
   validateBid,
   validateCreateMandate,
   assertInvariants,
@@ -146,6 +147,21 @@ describe("golden vectors: schedule and epoch timing", () => {
             }
           : r;
       expect(shaped).toEqual(c.expect);
+    });
+  }
+});
+
+describe("golden vectors: acceptance cutoff", () => {
+  for (const c of vectors.acceptance_cutoff) {
+    it(`cutoff start=${c.start_at} buffer=${c.position_lock_buffer_seconds} setup=${c.min_setup_window_seconds}`, () => {
+      const r = outcome(() =>
+        acceptanceCutoff(
+          big(c.start_at),
+          big(c.position_lock_buffer_seconds),
+          big(c.min_setup_window_seconds),
+        ),
+      );
+      expect("ok" in r ? { ok: r.ok.toString() } : r).toEqual(c.expect);
     });
   }
 });

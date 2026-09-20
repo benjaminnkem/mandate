@@ -1554,6 +1554,120 @@
    }
   ]
  },
+ "acceptance_cutoff": [
+  {
+   "start_at": "1800000000",
+   "position_lock_buffer_seconds": "300",
+   "min_setup_window_seconds": "600",
+   "expect": {
+    "ok": "1799999100"
+   }
+  },
+  {
+   "start_at": "1800000000",
+   "position_lock_buffer_seconds": "0",
+   "min_setup_window_seconds": "0",
+   "expect": {
+    "ok": "1800000000"
+   }
+  },
+  {
+   "start_at": "1800000000",
+   "position_lock_buffer_seconds": "300",
+   "min_setup_window_seconds": "0",
+   "expect": {
+    "ok": "1799999700"
+   }
+  },
+  {
+   "start_at": "1800000000",
+   "position_lock_buffer_seconds": "0",
+   "min_setup_window_seconds": "600",
+   "expect": {
+    "ok": "1799999400"
+   }
+  },
+  {
+   "start_at": "0",
+   "position_lock_buffer_seconds": "300",
+   "min_setup_window_seconds": "600",
+   "expect": {
+    "ok": "-900"
+   }
+  },
+  {
+   "start_at": "-5",
+   "position_lock_buffer_seconds": "300",
+   "min_setup_window_seconds": "600",
+   "expect": {
+    "ok": "-905"
+   }
+  },
+  {
+   "start_at": "-9223372036854774908",
+   "position_lock_buffer_seconds": "300",
+   "min_setup_window_seconds": "600",
+   "expect": {
+    "ok": "-9223372036854775808"
+   }
+  },
+  {
+   "start_at": "-9223372036854774909",
+   "position_lock_buffer_seconds": "300",
+   "min_setup_window_seconds": "600",
+   "expect": {
+    "err": "ArithmeticOverflow"
+   }
+  },
+  {
+   "start_at": "9223372036854775807",
+   "position_lock_buffer_seconds": "0",
+   "min_setup_window_seconds": "0",
+   "expect": {
+    "ok": "9223372036854775807"
+   }
+  },
+  {
+   "start_at": "9223372036854775807",
+   "position_lock_buffer_seconds": "-9223372036854775808",
+   "min_setup_window_seconds": "0",
+   "expect": {
+    "err": "ArithmeticOverflow"
+   }
+  },
+  {
+   "start_at": "9223372036854775807",
+   "position_lock_buffer_seconds": "0",
+   "min_setup_window_seconds": "-9223372036854775808",
+   "expect": {
+    "err": "ArithmeticOverflow"
+   }
+  },
+  {
+   "start_at": "-9223372036854775808",
+   "position_lock_buffer_seconds": "1",
+   "min_setup_window_seconds": "0",
+   "expect": {
+    "err": "ArithmeticOverflow"
+   }
+  },
+  {
+   "start_at": "-9223372036854775808",
+   "position_lock_buffer_seconds": "0",
+   "min_setup_window_seconds": "0",
+   "expect": {
+    "ok": "-9223372036854775808"
+   }
+  },
+  {
+   "start_at": "1",
+   "position_lock_buffer_seconds": "1",
+   "min_setup_window_seconds": "1",
+   "expect": {
+    "ok": "-1"
+   }
+  }
+ ],
  "compliance": [
   {
    "thresholds": {

@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use mandate_core::accounting::AccountingState;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace, Debug)]
 pub enum MandateStatus {
@@ -70,5 +71,23 @@ pub struct Mandate {
 impl Mandate {
     pub fn has_accepted_bid(&self) -> bool {
         self.accepted_bid != Pubkey::default()
+    }
+
+    /// The exact-accounting view of this mandate. Once a bid is accepted, `accepted_reward_raw` is set;
+    /// before that the accounting is not meaningful and callers must not use it.
+    pub fn accounting(&self) -> AccountingState {
+        AccountingState {
+            max_reward_raw: self.max_reward_raw,
+            accepted_reward_raw: self.accepted_reward_raw,
+            total_epochs: self.total_epochs,
+            finalized_epochs: self.finalized_epochs,
+            compliant_epochs: self.compliant_epochs,
+            noncompliant_epochs: self.noncompliant_epochs,
+            unavailable_epochs: self.unavailable_epochs,
+            earned_reward_raw: self.earned_reward_raw,
+            forfeited_reward_raw: self.forfeited_reward_raw,
+            claimed_reward_raw: self.claimed_reward_raw,
+            sponsor_withdrawn_raw: self.sponsor_withdrawn_raw,
+        }
     }
 }

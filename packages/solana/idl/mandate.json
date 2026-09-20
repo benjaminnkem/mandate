@@ -52,6 +52,115 @@
       "args": []
     },
     {
+      "name": "accept_bid",
+      "docs": [
+        "Sponsor: award the mandate to one bid, fixing provider, reward and epoch split."
+      ],
+      "discriminator": [
+        196,
+        191,
+        1,
+        229,
+        144,
+        172,
+        122,
+        227
+      ],
+      "accounts": [
+        {
+          "name": "sponsor",
+          "signer": true,
+          "relations": [
+            "mandate"
+          ]
+        },
+        {
+          "name": "protocol",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mandate",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate.sponsor",
+                "account": "Mandate"
+              },
+              {
+                "kind": "account",
+                "path": "mandate.mandate_id",
+                "account": "Mandate"
+              }
+            ]
+          },
+          "relations": [
+            "bid"
+          ]
+        },
+        {
+          "name": "bid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate"
+              },
+              {
+                "kind": "account",
+                "path": "bid.provider",
+                "account": "Bid"
+              },
+              {
+                "kind": "account",
+                "path": "bid.nonce",
+                "account": "Bid"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "cancel_admin_transfer",
       "docs": [
         "Admin: withdraw a pending nomination."
@@ -94,6 +203,63 @@
           "relations": [
             "protocol"
           ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancel_bid",
+      "docs": [
+        "Provider: withdraw an active bid."
+      ],
+      "discriminator": [
+        40,
+        243,
+        190,
+        217,
+        208,
+        253,
+        86,
+        206
+      ],
+      "accounts": [
+        {
+          "name": "provider",
+          "signer": true,
+          "relations": [
+            "bid"
+          ]
+        },
+        {
+          "name": "bid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bid.mandate",
+                "account": "Bid"
+              },
+              {
+                "kind": "account",
+                "path": "bid.provider",
+                "account": "Bid"
+              },
+              {
+                "kind": "account",
+                "path": "bid.nonce",
+                "account": "Bid"
+              }
+            ]
+          }
         }
       ],
       "args": []
@@ -213,6 +379,99 @@
             "Where the escrow returns. Any USDC account the sponsor owns."
           ],
           "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "close_bid",
+      "docs": [
+        "Provider: reclaim the rent of a cancelled or unselected bid."
+      ],
+      "discriminator": [
+        169,
+        171,
+        66,
+        115,
+        220,
+        168,
+        231,
+        21
+      ],
+      "accounts": [
+        {
+          "name": "provider",
+          "docs": [
+            "Receives the bid account's rent."
+          ],
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "bid"
+          ]
+        },
+        {
+          "name": "bid",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bid.mandate",
+                "account": "Bid"
+              },
+              {
+                "kind": "account",
+                "path": "bid.provider",
+                "account": "Bid"
+              },
+              {
+                "kind": "account",
+                "path": "bid.nonce",
+                "account": "Bid"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mandate",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate.sponsor",
+                "account": "Mandate"
+              },
+              {
+                "kind": "account",
+                "path": "mandate.mandate_id",
+                "account": "Mandate"
+              }
+            ]
+          },
+          "relations": [
+            "bid"
+          ]
         }
       ],
       "args": []
@@ -767,6 +1026,131 @@
       ]
     },
     {
+      "name": "submit_bid",
+      "docs": [
+        "Provider: place an open bid on a mandate. Nothing but rent is taken."
+      ],
+      "discriminator": [
+        19,
+        164,
+        237,
+        254,
+        64,
+        139,
+        237,
+        93
+      ],
+      "accounts": [
+        {
+          "name": "provider",
+          "docs": [
+            "The bidding provider. Pays the bid account's rent; nothing else is ever taken from them."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "protocol",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mandate",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate.sponsor",
+                "account": "Mandate"
+              },
+              {
+                "kind": "account",
+                "path": "mandate.mandate_id",
+                "account": "Mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bid",
+          "docs": [
+            "The same provider may hold several bids on one mandate by using distinct nonces. Reusing a nonce",
+            "derives an address that already exists and fails."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate"
+              },
+              {
+                "kind": "account",
+                "path": "provider"
+              },
+              {
+                "kind": "arg",
+                "path": "nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "requested_reward_raw",
+          "type": "u64"
+        },
+        {
+          "name": "valid_until",
+          "type": "i64"
+        }
+      ]
+    },
+    {
       "name": "upsert_market",
       "docs": [
         "Admin: create (disabled) or refresh an approved market."
@@ -862,9 +1246,135 @@
           }
         }
       ]
+    },
+    {
+      "name": "withdraw_surplus_after_award",
+      "docs": [
+        "Sponsor: withdraw what the rules currently release (the award surplus)."
+      ],
+      "discriminator": [
+        177,
+        172,
+        244,
+        65,
+        21,
+        86,
+        90,
+        57
+      ],
+      "accounts": [
+        {
+          "name": "sponsor",
+          "signer": true,
+          "relations": [
+            "mandate"
+          ]
+        },
+        {
+          "name": "protocol",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mandate",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate.sponsor",
+                "account": "Mandate"
+              },
+              {
+                "kind": "account",
+                "path": "mandate.mandate_id",
+                "account": "Mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sponsor_usdc",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "amount_raw",
+          "type": "u64"
+        }
+      ]
     }
   ],
   "accounts": [
+    {
+      "name": "Bid",
+      "discriminator": [
+        143,
+        246,
+        48,
+        245,
+        42,
+        145,
+        180,
+        88
+      ]
+    },
     {
       "name": "Mandate",
       "discriminator": [
@@ -959,6 +1469,58 @@
       ]
     },
     {
+      "name": "BidAccepted",
+      "discriminator": [
+        19,
+        140,
+        36,
+        175,
+        195,
+        5,
+        55,
+        193
+      ]
+    },
+    {
+      "name": "BidCancelled",
+      "discriminator": [
+        175,
+        52,
+        76,
+        11,
+        201,
+        1,
+        205,
+        65
+      ]
+    },
+    {
+      "name": "BidClosed",
+      "discriminator": [
+        34,
+        163,
+        44,
+        172,
+        23,
+        66,
+        254,
+        237
+      ]
+    },
+    {
+      "name": "BidSubmitted",
+      "discriminator": [
+        116,
+        72,
+        108,
+        240,
+        175,
+        70,
+        56,
+        22
+      ]
+    },
+    {
       "name": "MandateCancelled",
       "discriminator": [
         124,
@@ -1047,6 +1609,19 @@
         118,
         76,
         132
+      ]
+    },
+    {
+      "name": "SponsorSurplusWithdrawn",
+      "discriminator": [
+        45,
+        140,
+        234,
+        62,
+        56,
+        104,
+        226,
+        196
       ]
     }
   ],
@@ -1163,6 +1738,56 @@
     },
     {
       "code": 6022,
+      "name": "BiddingClosed",
+      "msg": "Bidding has closed"
+    },
+    {
+      "code": 6023,
+      "name": "AcceptanceClosed",
+      "msg": "The acceptance deadline has passed"
+    },
+    {
+      "code": 6024,
+      "name": "BidExpired",
+      "msg": "Bid has expired"
+    },
+    {
+      "code": 6025,
+      "name": "BidNotActive",
+      "msg": "Bid is not active"
+    },
+    {
+      "code": 6026,
+      "name": "BidNotClosable",
+      "msg": "Bid cannot be closed yet"
+    },
+    {
+      "code": 6027,
+      "name": "BidMismatch",
+      "msg": "Bid does not belong to this mandate"
+    },
+    {
+      "code": 6028,
+      "name": "UnauthorizedProvider",
+      "msg": "Signer is not the bid's provider"
+    },
+    {
+      "code": 6029,
+      "name": "MandateNotAwarded",
+      "msg": "Mandate has not been awarded"
+    },
+    {
+      "code": 6030,
+      "name": "NothingToWithdraw",
+      "msg": "Nothing to withdraw"
+    },
+    {
+      "code": 6031,
+      "name": "WithdrawExceedsAvailable",
+      "msg": "Withdrawal exceeds the amount available to the sponsor"
+    },
+    {
+      "code": 6032,
       "name": "Unexpected",
       "msg": "Unexpected settlement error"
     }
@@ -1212,6 +1837,195 @@
           {
             "name": "pending_admin",
             "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Bid",
+      "docs": [
+        "One provider bid. PDA `[b\"bid\", mandate, provider, nonce_le]`.",
+        "",
+        "A bid holds no funds: placing one costs the provider only rent. The nonce lets a provider hold several",
+        "bids on one mandate without overwriting history; an address can never be reused while it exists."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "provider",
+            "type": "pubkey"
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          },
+          {
+            "name": "requested_reward_raw",
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "valid_until",
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "BidStatus"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "BidAccepted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "bid",
+            "type": "pubkey"
+          },
+          {
+            "name": "provider",
+            "type": "pubkey"
+          },
+          {
+            "name": "accepted_reward_raw",
+            "type": "u64"
+          },
+          {
+            "name": "base_epoch_reward_raw",
+            "type": "u64"
+          },
+          {
+            "name": "final_epoch_extra_raw",
+            "type": "u64"
+          },
+          {
+            "name": "surplus_raw",
+            "docs": [
+              "`max_reward_raw - accepted_reward_raw`, withdrawable by the sponsor immediately."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BidCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bid",
+            "type": "pubkey"
+          },
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "provider",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BidClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bid",
+            "type": "pubkey"
+          },
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "provider",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BidStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Cancelled"
+          },
+          {
+            "name": "Accepted"
+          },
+          {
+            "name": "RejectedByAward"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BidSubmitted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bid",
+            "type": "pubkey"
+          },
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "provider",
+            "type": "pubkey"
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          },
+          {
+            "name": "requested_reward_raw",
+            "type": "u64"
+          },
+          {
+            "name": "valid_until",
+            "type": "i64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
           }
         ]
       }
@@ -2069,6 +2883,34 @@
       }
     },
     {
+      "name": "SponsorSurplusWithdrawn",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "sponsor",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_raw",
+            "type": "u64"
+          },
+          {
+            "name": "total_withdrawn_raw",
+            "type": "u64"
+          },
+          {
+            "name": "vault_balance_raw",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "VenueType",
       "type": {
         "kind": "enum",
@@ -2081,6 +2923,11 @@
     }
   ],
   "constants": [
+    {
+      "name": "BID_SEED",
+      "type": "bytes",
+      "value": "[98, 105, 100]"
+    },
     {
       "name": "MANDATE_SEED",
       "type": "bytes",

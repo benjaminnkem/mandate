@@ -57,14 +57,15 @@ as provider failure.
 
 ## Repository status
 
-Prompts 1 to 5 of [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md) are complete: the monorepo is scaffolded, the
+Prompts 1 to 6 of [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md) are complete: the monorepo is scaffolded, the
 domain and settlement math exist in TypeScript and Rust with shared golden vectors, and a deterministic measurement
 engine reproduces real PreStocks/USDC Meteora DLMM measurements byte for byte from a recorded mainnet snapshot (see
 [`docs/research/current-market.md`](docs/research/current-market.md) and
 [`docs/methodology/measurement-v1.md`](docs/methodology/measurement-v1.md)). The Anchor program has its protocol
 foundation (configuration, two-step admin transfer, new-risk pause, immutable observer sets, approved-market registry)
-and sponsor mandates with atomic USDC escrow in a program-owned vault, with cancellation. Bids, award, positions and
-settlement do not exist yet, and no market is approved.
+sponsor mandates with atomic USDC escrow in a program-owned vault, open provider bidding, sponsor award with the exact
+per-epoch reward split, and surplus withdrawal. Positions, epochs and settlement do not exist yet, and no market is
+approved.
 
 | Area | State |
 | --- | --- |
@@ -74,9 +75,9 @@ settlement do not exist yet, and no market is approved.
 | `packages/domain`, `crates/mandate-core` | integer money math, epoch/reward/compliance/accounting, validation (Prompt 2) |
 | `packages/solana` | IDL-driven TypeScript client, verified byte-for-byte against the Rust program (Prompt 5) |
 | `packages/db`, `packages/testkit` | empty shells |
-| `programs/mandate` | 10 instructions: protocol config, admin transfer, pause, observer sets, market registry, create/cancel mandate with USDC escrow (Prompts 4-5) |
+| `programs/mandate` | 15 instructions: protocol config, admin transfer, pause, observer sets, market registry, mandate + escrow, bidding, award, surplus withdrawal (Prompts 4-6) |
 | `crates/mandate-core` | pure settlement + protocol validation + fail-closed `LbPair` reader |
-| `crates/program-tests` | 82 LiteSVM tests executing the compiled SBF binary, plus Rust-generated client vectors |
+| `crates/program-tests` | 121 LiteSVM tests executing the compiled SBF binary, plus Rust-generated client vectors |
 | Architecture decisions | [`docs/adr/`](docs/adr/) |
 
 ## Toolchain

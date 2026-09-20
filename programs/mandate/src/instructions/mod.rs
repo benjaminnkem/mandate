@@ -1,13 +1,21 @@
+pub mod accept_bid;
 pub mod admin;
+pub mod cancel_bid;
 pub mod cancel_unawarded_mandate;
 pub mod create_mandate;
 pub mod create_observer_set;
 pub mod initialize_protocol;
 pub mod market;
+pub mod submit_bid;
+pub mod withdraw_surplus_after_award;
 
+pub use accept_bid::*;
 pub use admin::*;
+pub use cancel_bid::*;
 pub use cancel_unawarded_mandate::*;
 pub use create_mandate::*;
 pub use create_observer_set::*;
 pub use initialize_protocol::*;
 pub use market::*;
+pub use submit_bid::*;
+pub use withdraw_surplus_after_award::*;

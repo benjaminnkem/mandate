@@ -91,3 +91,49 @@ pub struct MandateCancelled {
     /// Exact USDC returned to the sponsor.
     pub refunded_raw: u64,
 }
+
+#[event]
+pub struct BidSubmitted {
+    pub bid: Pubkey,
+    pub mandate: Pubkey,
+    pub provider: Pubkey,
+    pub nonce: u64,
+    pub requested_reward_raw: u64,
+    pub valid_until: i64,
+    pub created_at: i64,
+}
+
+#[event]
+pub struct BidCancelled {
+    pub bid: Pubkey,
+    pub mandate: Pubkey,
+    pub provider: Pubkey,
+}
+
+#[event]
+pub struct BidClosed {
+    pub bid: Pubkey,
+    pub mandate: Pubkey,
+    pub provider: Pubkey,
+}
+
+#[event]
+pub struct BidAccepted {
+    pub mandate: Pubkey,
+    pub bid: Pubkey,
+    pub provider: Pubkey,
+    pub accepted_reward_raw: u64,
+    pub base_epoch_reward_raw: u64,
+    pub final_epoch_extra_raw: u64,
+    /// `max_reward_raw - accepted_reward_raw`, withdrawable by the sponsor immediately.
+    pub surplus_raw: u64,
+}
+
+#[event]
+pub struct SponsorSurplusWithdrawn {
+    pub mandate: Pubkey,
+    pub sponsor: Pubkey,
+    pub amount_raw: u64,
+    pub total_withdrawn_raw: u64,
+    pub vault_balance_raw: u64,
+}

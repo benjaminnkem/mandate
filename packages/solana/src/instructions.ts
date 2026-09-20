@@ -3,6 +3,7 @@ import type { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { buildInstruction } from "./build.ts";
 import { MANDATE_PROGRAM_ID, TOKEN_PROGRAM_ID } from "./idl.ts";
 import {
+  findBidPda,
   findMandatePda,
   findMarketPda,
   findObserverSetPda,
@@ -211,6 +212,96 @@ export function cancelUnawardedMandate(
       usdc_mint: p.usdcMint,
       token_program: p.tokenProgram ?? TOKEN_PROGRAM_ID,
       vault: findVaultPda(mandate, pid(p)),
+      sponsor_usdc: p.sponsorUsdc,
+    },
+    pid(p),
+  );
+}
+
+export function submitBid(
+  p: Common & {
+    provider: PublicKey;
+    mandate: PublicKey;
+    nonce: bigint;
+    requestedRewardRaw: bigint;
+    validUntil: bigint;
+  },
+): TransactionInstruction {
+  return buildInstruction(
+    "submit_bid",
+    { nonce: p.nonce, requestedRewardRaw: p.requestedRewardRaw, validUntil: p.validUntil },
+    {
+      provider: p.provider,
+      protocol: findProtocolPda(pid(p)),
+      mandate: p.mandate,
+      bid: findBidPda(p.mandate, p.provider, p.nonce, pid(p)),
+    },
+    pid(p),
+  );
+}
+
+export function cancelBid(
+  p: Common & { provider: PublicKey; mandate: PublicKey; nonce: bigint },
+): TransactionInstruction {
+  return buildInstruction(
+    "cancel_bid",
+    {},
+    { provider: p.provider, bid: findBidPda(p.mandate, p.provider, p.nonce, pid(p)) },
+    pid(p),
+  );
+}
+
+export function closeBid(
+  p: Common & { provider: PublicKey; mandate: PublicKey; nonce: bigint },
+): TransactionInstruction {
+  return buildInstruction(
+    "close_bid",
+    {},
+    {
+      provider: p.provider,
+      bid: findBidPda(p.mandate, p.provider, p.nonce, pid(p)),
+      mandate: p.mandate,
+    },
+    pid(p),
+  );
+}
+
+export function acceptBid(
+  p: Common & { sponsor: PublicKey; mandate: PublicKey; provider: PublicKey; nonce: bigint },
+): TransactionInstruction {
+  return buildInstruction(
+    "accept_bid",
+    {},
+    {
+      sponsor: p.sponsor,
+      protocol: findProtocolPda(pid(p)),
+      mandate: p.mandate,
+      bid: findBidPda(p.mandate, p.provider, p.nonce, pid(p)),
+    },
+    pid(p),
+  );
+}
+
+export function withdrawSurplusAfterAward(
+  p: Common & {
+    sponsor: PublicKey;
+    sponsorUsdc: PublicKey;
+    mandate: PublicKey;
+    usdcMint: PublicKey;
+    amountRaw: bigint;
+    tokenProgram?: PublicKey;
+  },
+): TransactionInstruction {
+  return buildInstruction(
+    "withdraw_surplus_after_award",
+    { amountRaw: p.amountRaw },
+    {
+      sponsor: p.sponsor,
+      protocol: findProtocolPda(pid(p)),
+      mandate: p.mandate,
+      usdc_mint: p.usdcMint,
+      token_program: p.tokenProgram ?? TOKEN_PROGRAM_ID,
+      vault: findVaultPda(p.mandate, pid(p)),
       sponsor_usdc: p.sponsorUsdc,
     },
     pid(p),

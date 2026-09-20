@@ -15,7 +15,8 @@ use mandate_core::math::{
 };
 use mandate_core::reward::{epoch_reward, split_reward};
 use mandate_core::timing::{
-    build_schedule, epoch_bounds, epoch_position_at, EpochPosition, DEFAULT_SCHEDULE_BOUNDS,
+    acceptance_cutoff, build_schedule, epoch_bounds, epoch_position_at, EpochPosition,
+    DEFAULT_SCHEDULE_BOUNDS,
 };
 use mandate_core::validation::{
     validate_bid, validate_create_mandate, BidParams, CreateMandateParams, ErrorSet, ProtocolLimits,
@@ -202,6 +203,27 @@ fn epoch_position_and_bounds_match_oracle() {
                     ok["recovery_deadline"].as_str().unwrap(),
                     "{case}"
                 );
+            }
+            (Err(error), None, Some(err)) => {
+                assert_eq!(error.as_str(), err.as_str().unwrap(), "{case}")
+            }
+            (got, ..) => panic!("{case}: got {got:?}"),
+        }
+    }
+}
+
+#[test]
+fn acceptance_cutoff_matches_oracle() {
+    for case in vectors()["acceptance_cutoff"].as_array().unwrap() {
+        let result = acceptance_cutoff(
+            i64_of(case, "start_at"),
+            i64_of(case, "position_lock_buffer_seconds"),
+            i64_of(case, "min_setup_window_seconds"),
+        );
+        let expect = &case["expect"];
+        match (result, expect.get("ok"), expect.get("err")) {
+            (Ok(value), Some(ok), None) => {
+                assert_eq!(value.to_string(), ok.as_str().unwrap(), "{case}")
             }
             (Err(error), None, Some(err)) => {
                 assert_eq!(error.as_str(), err.as_str().unwrap(), "{case}")

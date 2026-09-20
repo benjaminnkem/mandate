@@ -1,8 +1,8 @@
 //! Mandate: market-quality procurement on Solana.
 //!
 //! Implemented so far: protocol configuration, two-step admin transfer, new-risk pause, immutable
-//! versioned observer sets, the approved market registry, and mandate creation with USDC escrow.
-//! Bids, award, positions, attestations and settlement arrive in later steps (docs/BUILD_PROMPTS.md).
+//! versioned observer sets, the approved market registry, mandate creation with USDC escrow, open
+//! bidding and award. Positions, attestations and settlement arrive in later steps (docs/BUILD_PROMPTS.md).
 //!
 //! Authoritative design: docs/TECHNICAL_SPEC.md sections 5 and 6.
 //!
@@ -86,5 +86,40 @@ pub mod mandate {
     /// Sponsor: cancel a mandate no bid has been accepted on and take the escrow back.
     pub fn cancel_unawarded_mandate(ctx: Context<CancelUnawardedMandate>) -> Result<()> {
         instructions::cancel_unawarded_mandate::handle_cancel_unawarded_mandate(ctx)
+    }
+
+    /// Provider: place an open bid on a mandate. Nothing but rent is taken.
+    pub fn submit_bid(
+        ctx: Context<SubmitBid>,
+        nonce: u64,
+        requested_reward_raw: u64,
+        valid_until: i64,
+    ) -> Result<()> {
+        instructions::submit_bid::handle_submit_bid(ctx, nonce, requested_reward_raw, valid_until)
+    }
+
+    /// Provider: withdraw an active bid.
+    pub fn cancel_bid(ctx: Context<CancelBid>) -> Result<()> {
+        instructions::cancel_bid::handle_cancel_bid(ctx)
+    }
+
+    /// Provider: reclaim the rent of a cancelled or unselected bid.
+    pub fn close_bid(ctx: Context<CloseBid>) -> Result<()> {
+        instructions::cancel_bid::handle_close_bid(ctx)
+    }
+
+    /// Sponsor: award the mandate to one bid, fixing provider, reward and epoch split.
+    pub fn accept_bid(ctx: Context<AcceptBid>) -> Result<()> {
+        instructions::accept_bid::handle_accept_bid(ctx)
+    }
+
+    /// Sponsor: withdraw what the rules currently release (the award surplus).
+    pub fn withdraw_surplus_after_award(
+        ctx: Context<WithdrawSurplusAfterAward>,
+        amount_raw: u64,
+    ) -> Result<()> {
+        instructions::withdraw_surplus_after_award::handle_withdraw_surplus_after_award(
+            ctx, amount_raw,
+        )
     }
 }
