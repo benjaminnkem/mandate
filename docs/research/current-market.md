@@ -47,11 +47,35 @@ The same key controls freeze, pause, fees, hook, multiplier and permanent delega
 - SDK active-bin raw price 1654.90 / 1.4861347 = 1113.57 USDC per UI token, which equals the data API's `current_price`. The pool works in raw units; UI prices are divided by the multiplier.
 - PreStocks `tokenPrice` 1151.23 and `markPrice` 995.47 are context only and never settlement inputs (PRD 6.7). They differ from the pool by a few percent, which is expected and not a bug.
 
-## Implications for the specification (open, verify in Prompt 3)
+## Measured with the canonical engine (Prompt 3)
 
-1. **The PRD's example spread threshold of 100 bps is very likely unachievable on this pool.** Round-trip spread includes the pool fee on each leg (0.75% x 2 = 150 bps) and possibly the 1% transfer fee on the base token on each leg (up to about 200 bps more). Realistic thresholds may be roughly 200 to 400 bps. Prompt 3 measures the real number; PRD and UI defaults must not present 100 bps as an example without that check. Never label a default "safe".
-2. `probe_quote_raw` must be sized against a pool where the active bin holds about 3,614 USDC (raw `3613606772`) and 27,463,399 raw base: a probe larger than the active bin already crosses bins and mixes spread with depth.
-3. Position ownership, operator handling, pause and hook handling are recorded in ADR 0008 and need product-owner confirmation on two points.
+Network: **mainnet-beta, read-only**, one atomic snapshot at slot 448,786,149 (Solana epoch 1038, unix ts 1789921836).
+Recorded as a fixture: `packages/meteora/test/fixtures/openai-usdc-mainnet.snapshot.json`; replaying it offline
+reproduces every number and the payload hash exactly (`docs/methodology/measurement-v1.md`).
+
+| Metric (probe 10 USDC, band 500 bps) | Value |
+| --- | --- |
+| Probe round trip | 10.000000 USDC buys 5,937,659 raw base; selling it back returns 9.752300 USDC (`Q0=10000000`, `B0=5937659`, `S0=9752300`) |
+| Effective spread | **251 bps** |
+| Pool buy depth within 500 bps | 63,491.02 USDC |
+| Pool sell depth within 500 bps | 49,065.54 USDC |
+| Real provider (`2Kmm...jak`, 3 positions), quote in band | 91.107867 USDC |
+| Same provider, base in band, quote-equivalent | 81.314309 USDC (48,887,131 raw base) |
+
+### What this verified
+
+1. **The PRD's 100 bps example was unachievable.** The 251 bps is 2 x 0.75% pool fee plus 2 x 0.50% transfer fee. The example is now 400 bps with a note in the PRD.
+2. **The transfer fee changes at the next Solana epoch.** Epoch 1038 uses the older 50 bps schedule; the mint's newer 100 bps schedule takes effect at epoch 1039, when the same round trip will cost about 351 bps. A mandate spanning that boundary sees its spread jump by about 100 bps with no change in provider behaviour. Sponsors and providers must be told; thresholds set today from a 251 bps reading would fail across the boundary.
+3. **Quotes are transfer-fee aware on both legs** (SDK source and live check), so the spread needs no manual fee adjustment.
+4. **Attribution works on real accounts.** Three positions owned by the provider counted; a position owned by another wallet was excluded (`ExcludedOwnerMismatch`); a non-existent address was excluded (`ExcludedMissing`).
+5. **Operator-managed positions were not seen.** The pool has 110 `PositionV2` accounts; in the 14 whose fields were inspected the `operator` was unset, so the operator-managed case in ADR 0008 has not been observed here (the other 96 were not inspected).
+6. **A 10,000,000 USDC probe is refused** by the pool as insufficient liquidity and surfaces as `BuyProbeUnavailable`, never as a metric.
+7. The public Solana RPC served a coherent atomic read but with an 11-slot skew across the SDK's separate reads, which is why observations use one atomic request (ADR 0010).
+
+### Still open
+
+- `probe_quote_raw` sizing: the active bin holds about 3,614 USDC raw `3613606772` and 27,463,399 raw base at the earlier snapshot; a 10 USDC probe stays inside one bin, so it measures fee-dominated spread rather than depth. A larger probe mixes spread with depth. The recommended default is left to the product owner; the algorithm accepts any probe within the protocol bounds.
+- Cross-OS determinism has only been run on macOS. The golden-hash test runs on the Linux CI job.
 
 ## Verification of the mint set
 

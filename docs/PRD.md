@@ -17,7 +17,11 @@ Mandate is a Solana-native **market-quality procurement protocol**.
 
 An issuer, asset community, treasury, venue or protocol can escrow USDC and publish a concrete liquidity requirement for an exact tokenized-stock market—for example:
 
-> Maintain at least 8,000 USDC of executable buy depth and 8,000 USDC-equivalent sell depth within the configured impact band, keep effective two-sided spread below 100 bps, and contribute at least 5,000 USDC-equivalent of attributable in-range liquidity for 95% of 5-minute epochs over six hours.
+> Maintain at least 8,000 USDC of executable buy depth and 8,000 USDC-equivalent sell depth within the configured impact band, keep effective two-sided spread below 400 bps, and contribute at least 5,000 USDC-equivalent of attributable in-range liquidity for 95% of 5-minute epochs over six hours.
+
+> Illustrative figures only. On the live OPENAI/USDC pool the measured probe round-trip spread is about 251 bps today
+> (2 x 0.75% pool fee + 2 x 0.5% transfer fee) and will be about 351 bps once the token's transfer fee rises to 100 bps at
+> epoch 1039, so a threshold of 100 bps could never be met on that market. See `docs/research/current-market.md`.
 
 Market makers bid for the contract. The sponsor accepts one bid. The provider registers the exact Meteora DLMM position accounts that will satisfy the mandate. Independent observer processes read public Solana/Meteora state, calculate canonical metrics using the official Meteora SDK and sign epoch attestations. Once a configured signature quorum is present, the Mandate program records the epoch. If all objective requirements pass, the provider earns that epoch's reward. If they do not, the provider earns nothing for that epoch.
 

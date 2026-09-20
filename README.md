@@ -57,17 +57,20 @@ as provider failure.
 
 ## Repository status
 
-Prompt 1 of [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md) is complete: the monorepo is scaffolded, quality gates
-pass, and a real PreStocks/USDC Meteora DLMM market has been researched and verified onchain (see
-[`docs/research/current-market.md`](docs/research/current-market.md)). No settlement logic, measurement math or
-program instruction exists yet, and no market is approved.
+Prompts 1 to 3 of [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md) are complete: the monorepo is scaffolded, the
+domain and settlement math exist in TypeScript and Rust with shared golden vectors, and a deterministic measurement
+engine reproduces real PreStocks/USDC Meteora DLMM measurements byte for byte from a recorded mainnet snapshot (see
+[`docs/research/current-market.md`](docs/research/current-market.md) and
+[`docs/methodology/measurement-v1.md`](docs/methodology/measurement-v1.md)). No program instruction exists yet, and
+no market is approved.
 
 | Area | State |
 | --- | --- |
 | `apps/web` (Next.js), `apps/api` (Fastify health/meta), `apps/indexer`, `apps/scheduler`, `apps/observer` | runnable shells with validated env |
 | `packages/config`, `packages/observability`, `packages/prestocks` | implemented and tested |
-| `packages/meteora` | official SDK loading only; measurement engine is Prompt 3 |
-| `packages/domain`, `packages/solana`, `packages/db`, `packages/testkit` | empty shells |
+| `packages/meteora` | canonical measurement engine v1, atomic snapshot record/replay, canonical evidence (Prompt 3) |
+| `packages/domain`, `crates/mandate-core` | integer money math, epoch/reward/compliance/accounting, validation (Prompt 2) |
+| `packages/solana`, `packages/db`, `packages/testkit` | empty shells |
 | `programs/mandate`, `crates/mandate-core` | builds (`anchor build`); no instructions yet |
 | Architecture decisions | [`docs/adr/`](docs/adr/) |
 
@@ -83,8 +86,9 @@ Node >= 24, pnpm 11.25.0, TypeScript 6.0.3, Rust 1.89.0, Solana CLI 4.2.2, Ancho
 pnpm install
 pnpm check              # format, lint, typecheck, tests, rustfmt, clippy, cargo tests
 pnpm program:build      # anchor build
-pnpm --filter @mandate/scripts inspect:prestocks -- --symbol OPENAI
-pnpm --filter @mandate/scripts market:discover -- --symbol OPENAI
+pnpm inspect:prestocks -- --symbol OPENAI
+pnpm market:discover -- --symbol OPENAI
+pnpm market:measure --pool <pool> --base-mint <mint> --provider <wallet> --positions <p1,p2>
 ```
 
 The two `scripts` commands are read-only and need `SOLANA_RPC_HTTP_URL`. Program, observer, indexer and

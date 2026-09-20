@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
     "inspect:prestocks": "node src/inspect-prestocks.ts",
-    "market:discover": "node src/discover-meteora-market.ts"
+    "market:discover": "node src/discover-meteora-market.ts",
+    "market:measure": "node src/measure-pool.ts",
+    "market:positions": "node src/list-positions.ts"
   },
   "dependencies": {
     "@mandate/config": "workspace:*",

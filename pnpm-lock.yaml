@@ -277,12 +277,21 @@ importers:
 
   packages/meteora:
     dependencies:
+      '@mandate/domain':
+        specifier: workspace:*
+        version: link:../domain
       '@meteora-ag/dlmm':
         specifier: 1.9.14
         version: 1.9.14(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(supports-color@7.2.0)(typescript@6.0.3)(utf-8-validate@6.0.6)
+      '@solana/spl-token':
+        specifier: 0.4.15
+        version: 0.4.15(@solana/web3.js@1.99.0(bufferutil@4.1.0)(typescript@6.0.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@6.0.3)(utf-8-validate@6.0.6)
       '@solana/web3.js':
         specifier: 1.99.0
         version: 1.99.0(bufferutil@4.1.0)(typescript@6.0.3)(utf-8-validate@6.0.6)
+      bn.js:
+        specifier: 5.2.5
+        version: 5.2.5
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
@@ -290,6 +299,9 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@types/bn.js':
+        specifier: 5.2.0
+        version: 5.2.0
       '@types/node':
         specifier: 26.6.2
         version: 26.6.2
@@ -1158,6 +1170,9 @@ packages:
     resolution: {integrity: sha512-u0M3m1aXo9lpDM/2iQhxlGzgWjHFq/MC4TqHn1YAvxk8g1wGtzRB2QBx/SLqRChhPhC29mzaB8eLcxKh/pcM1g==}
     cpu: [arm64]
     os: [win32]
+
+  '@types/bn.js@5.2.0':
+    resolution: {integrity: sha512-DLbJ1BPqxvQhIGbeu8VbUC1DiAiahHtAYvA0ZEAa4P31F7IaArc8z3C3BRQdWX4mtLQuABG4yzp76ZrS02Ui1Q==}
 
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
@@ -3360,6 +3375,10 @@ snapshots:
 
   '@turbo/windows-arm64@2.11.2':
     optional: true
+
+  '@types/bn.js@5.2.0':
+    dependencies:
+      '@types/node': 26.6.2
 
   '@types/chai@5.2.3':
     dependencies:

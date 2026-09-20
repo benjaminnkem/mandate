@@ -14,7 +14,10 @@
   },
   "dependencies": {
     "@meteora-ag/dlmm": "1.9.14",
-    "@solana/web3.js": "1.99.0"
+    "@solana/web3.js": "1.99.0",
+    "bn.js": "5.2.5",
+    "@solana/spl-token": "0.4.15",
+    "@mandate/domain": "workspace:*"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
@@ -22,6 +25,7 @@
     "@types/node": "26.6.2",
     "eslint": "10.11.0",
     "typescript": "6.0.3",
-    "vitest": "5.0.1"
+    "vitest": "5.0.1",
+    "@types/bn.js": "5.2.0"
   }
 }
