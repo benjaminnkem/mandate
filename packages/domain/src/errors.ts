@@ -18,6 +18,10 @@ export const DOMAIN_ERROR_CODES = [
   "NothingToWithdraw",
   "WithdrawExceedsAvailable",
   "InvariantViolation",
+  "InvalidProtocolParams",
+  "InvalidObserverSet",
+  "DuplicateObserver",
+  "InvalidMarket",
 ] as const;
 
 export type DomainErrorCode = (typeof DOMAIN_ERROR_CODES)[number];

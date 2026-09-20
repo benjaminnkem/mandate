@@ -57,12 +57,13 @@ as provider failure.
 
 ## Repository status
 
-Prompts 1 to 3 of [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md) are complete: the monorepo is scaffolded, the
+Prompts 1 to 4 of [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md) are complete: the monorepo is scaffolded, the
 domain and settlement math exist in TypeScript and Rust with shared golden vectors, and a deterministic measurement
 engine reproduces real PreStocks/USDC Meteora DLMM measurements byte for byte from a recorded mainnet snapshot (see
 [`docs/research/current-market.md`](docs/research/current-market.md) and
-[`docs/methodology/measurement-v1.md`](docs/methodology/measurement-v1.md)). No program instruction exists yet, and
-no market is approved.
+[`docs/methodology/measurement-v1.md`](docs/methodology/measurement-v1.md)). The Anchor program has its protocol
+foundation (configuration, two-step admin transfer, new-risk pause, immutable observer sets, approved-market registry)
+but no mandates, bids or vaults yet, and no market is approved.
 
 | Area | State |
 | --- | --- |
@@ -71,21 +72,23 @@ no market is approved.
 | `packages/meteora` | canonical measurement engine v1, atomic snapshot record/replay, canonical evidence (Prompt 3) |
 | `packages/domain`, `crates/mandate-core` | integer money math, epoch/reward/compliance/accounting, validation (Prompt 2) |
 | `packages/solana`, `packages/db`, `packages/testkit` | empty shells |
-| `programs/mandate`, `crates/mandate-core` | builds (`anchor build`); no instructions yet |
+| `programs/mandate` | 8 instructions: protocol config, admin transfer, pause, observer sets, market registry (Prompt 4) |
+| `crates/mandate-core` | pure settlement + protocol validation + fail-closed `LbPair` reader |
+| `crates/program-tests` | 55 LiteSVM tests executing the compiled SBF binary |
 | Architecture decisions | [`docs/adr/`](docs/adr/) |
 
 ## Toolchain
 
 Pinned and verified (details and sources in [`docs/adr/0002-runtime-and-tool-versions.md`](docs/adr/0002-runtime-and-tool-versions.md)):
-Node >= 24, pnpm 11.25.0, TypeScript 6.0.3, Rust 1.89.0, Solana CLI 4.2.2, Anchor 1.2.0, Surfpool 1.6.0,
+Node >= 24, pnpm 11.25.0, TypeScript 6.0.3, Rust 1.98.1 (host), Solana CLI 4.2.2, Anchor 1.2.0, Surfpool 1.6.0, LiteSVM 0.16,
 `@meteora-ag/dlmm` 1.9.14. See [`docs/ENVIRONMENT_SETUP.md`](docs/ENVIRONMENT_SETUP.md) for PostgreSQL/Redis.
 
 ## Commands
 
 ```bash
 pnpm install
-pnpm check              # format, lint, typecheck, tests, rustfmt, clippy, cargo tests
-pnpm program:build      # anchor build
+pnpm check              # format, vectors, lint, typecheck, TS tests, rustfmt, clippy, program build, Rust tests
+pnpm program:build      # cargo build-sbf + anchor idl build
 pnpm inspect:prestocks -- --symbol OPENAI
 pnpm market:discover -- --symbol OPENAI
 pnpm market:measure --pool <pool> --base-mint <mint> --provider <wallet> --positions <p1,p2>

@@ -41,7 +41,7 @@ pub struct CreateMandateParams {
 
 /// A set of distinct error codes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub struct ErrorSet(u16);
+pub struct ErrorSet(u32);
 
 impl ErrorSet {
     pub fn insert(&mut self, error: MandateCoreError) {
@@ -56,8 +56,8 @@ impl ErrorSet {
         self.0 == 0
     }
 
-    const fn bit(error: MandateCoreError) -> u16 {
-        match 1u16.checked_shl(error as u32) {
+    const fn bit(error: MandateCoreError) -> u32 {
+        match 1u32.checked_shl(error as u32) {
             Some(bit) => bit,
             None => 0,
         }

@@ -1,0 +1,25 @@
+[package]
+name = "program-tests"
+version = "0.1.0"
+description = "In-process integration tests for the Mandate Anchor program (LiteSVM executing the compiled SBF binary)"
+edition.workspace = true
+rust-version = "1.98.1"
+license.workspace = true
+publish = false
+
+[dev-dependencies]
+anchor-lang = "1.2.0"
+litesvm = "0.16"
+mandate = { path = "../../programs/mandate", features = ["cpi"] }
+mandate-core = { path = "../mandate-core" }
+base64 = "0.23"
+serde_json = "1"
+solana-account = "4"
+solana-address = "2"
+solana-instruction-error = "2"
+solana-keypair = "3"
+solana-message = "4"
+solana-signer = "3"
+solana-system-interface = { version = "3", features = ["bincode"] }
+solana-transaction = "4"
+solana-transaction-error = "3"

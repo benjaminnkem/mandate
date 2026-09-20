@@ -17,11 +17,15 @@ pub enum MandateCoreError {
     NothingToWithdraw,
     WithdrawExceedsAvailable,
     InvariantViolation,
+    InvalidProtocolParams,
+    InvalidObserverSet,
+    DuplicateObserver,
+    InvalidMarket,
 }
 
 impl MandateCoreError {
     /// All variants, in declaration order.
-    pub const ALL: [MandateCoreError; 15] = [
+    pub const ALL: [MandateCoreError; 19] = [
         Self::ArithmeticOverflow,
         Self::DivisionByZero,
         Self::InvalidEpochLength,
@@ -37,6 +41,10 @@ impl MandateCoreError {
         Self::NothingToWithdraw,
         Self::WithdrawExceedsAvailable,
         Self::InvariantViolation,
+        Self::InvalidProtocolParams,
+        Self::InvalidObserverSet,
+        Self::DuplicateObserver,
+        Self::InvalidMarket,
     ];
 
     /// The stable code name shared with TypeScript and the golden vectors.
@@ -57,6 +65,10 @@ impl MandateCoreError {
             Self::NothingToWithdraw => "NothingToWithdraw",
             Self::WithdrawExceedsAvailable => "WithdrawExceedsAvailable",
             Self::InvariantViolation => "InvariantViolation",
+            Self::InvalidProtocolParams => "InvalidProtocolParams",
+            Self::InvalidObserverSet => "InvalidObserverSet",
+            Self::DuplicateObserver => "DuplicateObserver",
+            Self::InvalidMarket => "InvalidMarket",
         }
     }
 }

@@ -8,7 +8,8 @@
 | Node.js | >= 24 (local 24.11.0), `.nvmrc` = 24 | required for native TypeScript execution |
 | pnpm | 11.25.0 | `packageManager` field |
 | TypeScript | 6.0.3 | see ADR 0001 |
-| Rust (host) | 1.89.0 via `rust-toolchain.toml` | matches the Anchor 1.2 template; rustup default on the dev box is 1.98.1 |
+| Rust (host) | 1.98.1 via `rust-toolchain.toml` | LiteSVM 0.16 / Agave 4.x crates need a newer Rust than the Anchor template's 1.89; SBF programs still build with platform-tools' rustc 1.95, so crate `rust-version` stays 1.89.0 (ADR 0011) |
+| LiteSVM | 0.16.0 | in-process program tests |
 | Solana CLI (Agave) | 4.2.2 | `release.anza.xyz/stable` |
 | Anchor CLI / `anchor-lang` | 1.2.0 | current stable; `v2.0.0-rc.1` exists and is deliberately not used |
 | Surfpool | 1.6.0 | GitHub release `txtx/surfpool` |
