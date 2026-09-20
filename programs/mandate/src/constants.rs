@@ -7,6 +7,10 @@ pub const PROTOCOL_SEED: &[u8] = b"protocol";
 pub const OBSERVER_SET_SEED: &[u8] = b"observer_set";
 #[constant]
 pub const MARKET_SEED: &[u8] = b"market";
+#[constant]
+pub const MANDATE_SEED: &[u8] = b"mandate";
+#[constant]
+pub const VAULT_SEED: &[u8] = b"vault";
 
 /// USDC has 6 decimals. The protocol refuses any other reward mint.
 pub const USDC_DECIMALS: u8 = 6;
@@ -15,6 +19,7 @@ pub const USDC_DECIMALS: u8 = 6;
 pub const PROTOCOL_VERSION: u8 = 1;
 pub const OBSERVER_SET_VERSION: u8 = 1;
 pub const MARKET_VERSION: u8 = 1;
+pub const MANDATE_VERSION: u8 = 1;
 
 /// Maximum observers, mirrored from `mandate_core` so account sizes are compile-time constants.
 pub const MAX_OBSERVERS: usize = mandate_core::MAX_OBSERVERS;

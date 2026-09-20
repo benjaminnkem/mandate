@@ -57,13 +57,14 @@ as provider failure.
 
 ## Repository status
 
-Prompts 1 to 4 of [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md) are complete: the monorepo is scaffolded, the
+Prompts 1 to 5 of [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md) are complete: the monorepo is scaffolded, the
 domain and settlement math exist in TypeScript and Rust with shared golden vectors, and a deterministic measurement
 engine reproduces real PreStocks/USDC Meteora DLMM measurements byte for byte from a recorded mainnet snapshot (see
 [`docs/research/current-market.md`](docs/research/current-market.md) and
 [`docs/methodology/measurement-v1.md`](docs/methodology/measurement-v1.md)). The Anchor program has its protocol
 foundation (configuration, two-step admin transfer, new-risk pause, immutable observer sets, approved-market registry)
-but no mandates, bids or vaults yet, and no market is approved.
+and sponsor mandates with atomic USDC escrow in a program-owned vault, with cancellation. Bids, award, positions and
+settlement do not exist yet, and no market is approved.
 
 | Area | State |
 | --- | --- |
@@ -71,10 +72,11 @@ but no mandates, bids or vaults yet, and no market is approved.
 | `packages/config`, `packages/observability`, `packages/prestocks` | implemented and tested |
 | `packages/meteora` | canonical measurement engine v1, atomic snapshot record/replay, canonical evidence (Prompt 3) |
 | `packages/domain`, `crates/mandate-core` | integer money math, epoch/reward/compliance/accounting, validation (Prompt 2) |
-| `packages/solana`, `packages/db`, `packages/testkit` | empty shells |
-| `programs/mandate` | 8 instructions: protocol config, admin transfer, pause, observer sets, market registry (Prompt 4) |
+| `packages/solana` | IDL-driven TypeScript client, verified byte-for-byte against the Rust program (Prompt 5) |
+| `packages/db`, `packages/testkit` | empty shells |
+| `programs/mandate` | 10 instructions: protocol config, admin transfer, pause, observer sets, market registry, create/cancel mandate with USDC escrow (Prompts 4-5) |
 | `crates/mandate-core` | pure settlement + protocol validation + fail-closed `LbPair` reader |
-| `crates/program-tests` | 55 LiteSVM tests executing the compiled SBF binary |
+| `crates/program-tests` | 82 LiteSVM tests executing the compiled SBF binary, plus Rust-generated client vectors |
 | Architecture decisions | [`docs/adr/`](docs/adr/) |
 
 ## Toolchain

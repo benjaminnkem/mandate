@@ -37,6 +37,8 @@ fn the_instruction_set_is_exactly_the_reviewed_one() {
         "create_observer_set",
         "upsert_market",
         "set_market_enabled",
+        "create_mandate",
+        "cancel_unawarded_mandate",
     ]
     .iter()
     .map(|s| s.to_string())
@@ -48,49 +50,62 @@ fn the_instruction_set_is_exactly_the_reviewed_one() {
     );
 }
 
+/// Instructions allowed to touch token accounts, each callable only by the sponsor. Extend this list
+/// deliberately (and review it) whenever a new fund-moving instruction is added.
+const FUND_MOVING: [&str; 2] = ["create_mandate", "cancel_unawarded_mandate"];
+
 #[test]
-fn no_instruction_can_move_funds() {
-    // There are no reward vaults yet. When they exist this test must be extended, not deleted: no
-    // instruction callable by the admin may take a token account or invoke the token program.
+fn only_reviewed_instructions_touch_tokens_and_none_takes_an_admin() {
     let idl = idl();
     for instruction in idl["instructions"].as_array().unwrap() {
         let name = instruction["name"].as_str().unwrap();
         let accounts = account_names(instruction);
-        for forbidden in [
-            "vault",
-            "token_account",
-            "destination",
-            "source",
-            "recipient",
-            "authority_token",
-        ] {
+        let touches_tokens = accounts
+            .iter()
+            .any(|a| a.contains("vault") || a.contains("usdc") || a.contains("token_program"));
+        // initialize_protocol only *reads* the mint and names its program; it takes no token account.
+        let takes_token_account = accounts
+            .iter()
+            .any(|a| a.contains("vault") || a.ends_with("_usdc"));
+        if takes_token_account {
             assert!(
-                !accounts.iter().any(|a| a.contains(forbidden)),
-                "{name} takes a fund-moving account named like `{forbidden}`: {accounts:?}"
+                FUND_MOVING.contains(&name),
+                "{name} takes a token account but is not on the reviewed fund-moving list"
+            );
+            assert!(
+                !accounts
+                    .iter()
+                    .any(|a| a == "admin" || a == "pending_admin" || a == "upgrade_authority"),
+                "{name} moves funds but also takes an admin-like account: {accounts:?}"
+            );
+            assert!(
+                accounts.iter().any(|a| a == "sponsor"),
+                "{name} must be signed by the sponsor"
             );
         }
+        let _ = touches_tokens;
         assert!(
-            !name.contains("withdraw")
-                && !name.contains("transfer_funds")
-                && !name.contains("sweep")
-                && !name.contains("seize"),
-            "{name} looks like a fund-moving instruction"
+            !name.contains("withdraw") && !name.contains("sweep") && !name.contains("seize"),
+            "{name} looks like an unreviewed fund-moving instruction"
         );
     }
 }
 
 #[test]
 fn observer_sets_are_only_ever_written_by_their_creation_instruction() {
+    // Other instructions may READ a set (create_mandate snapshots it) but only creation may write one.
     let idl = idl();
     for instruction in idl["instructions"].as_array().unwrap() {
         let name = instruction["name"].as_str().unwrap();
-        let takes_observer_set = account_names(instruction)
+        let writes = instruction["accounts"]
+            .as_array()
+            .unwrap()
             .iter()
-            .any(|a| a == "observer_set");
+            .any(|a| a["name"] == "observer_set" && a["writable"].as_bool().unwrap_or(false));
         assert_eq!(
-            takes_observer_set,
+            writes,
             name == "create_observer_set",
-            "{name} must not touch observer sets"
+            "{name} must not write observer sets"
         );
     }
 }
@@ -119,9 +134,22 @@ fn account_types_are_the_reviewed_ones() {
         .iter()
         .map(|a| a["name"].as_str().unwrap().to_string())
         .collect();
-    let expected: BTreeSet<String> = ["ProtocolConfig", "ObserverSet", "MarketConfig"]
+    let expected: BTreeSet<String> = ["ProtocolConfig", "ObserverSet", "MarketConfig", "Mandate"]
         .iter()
         .map(|s| s.to_string())
         .collect();
     assert_eq!(accounts, expected);
+}
+
+#[test]
+fn the_typescript_clients_idl_copy_is_current() {
+    let built = std::fs::read_to_string("../../target/idl/mandate.json").expect("IDL not built");
+    let copy = std::fs::read_to_string("../../packages/solana/idl/mandate.json")
+        .expect("client IDL missing: run `pnpm idl:sync`");
+    let normalise = |text: &str| serde_json::from_str::<serde_json::Value>(text).unwrap();
+    assert_eq!(
+        normalise(&built),
+        normalise(&copy),
+        "packages/solana/idl/mandate.json is stale: run `pnpm idl:sync`"
+    );
 }

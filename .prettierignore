@@ -8,3 +8,5 @@ pnpm-lock.yaml
 docs/evidence
 .keys
 packages/domain/vectors
+packages/solana/idl
+packages/solana/vectors

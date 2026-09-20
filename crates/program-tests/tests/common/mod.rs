@@ -441,3 +441,212 @@ pub fn events<T: anchor_lang::Event + anchor_lang::AnchorDeserialize>(logs: &[St
         .map(|bytes| T::deserialize(&mut &bytes[T::DISCRIMINATOR.len()..]).unwrap())
         .collect()
 }
+
+// ---- tokens, sponsors and mandates (Prompt 5) ------------------------------------------------
+
+pub const USDC: u64 = 1_000_000; // one USDC in raw units
+
+pub fn mandate_pda(sponsor: &Pubkey, id: u64) -> Pubkey {
+    Pubkey::find_program_address(
+        &[mandate::MANDATE_SEED, sponsor.as_ref(), &id.to_le_bytes()],
+        &mandate::ID,
+    )
+    .0
+}
+pub fn vault_pda(mandate_key: &Pubkey) -> Pubkey {
+    Pubkey::find_program_address(&[mandate::VAULT_SEED, mandate_key.as_ref()], &mandate::ID).0
+}
+
+/// A raw SPL token account (165 bytes, initialised).
+pub fn token_account(
+    mint: &Pubkey,
+    owner: &Pubkey,
+    amount: u64,
+    token_program: &str,
+) -> solana_account::Account {
+    let mut data = vec![0u8; 165];
+    data[0..32].copy_from_slice(mint.as_ref());
+    data[32..64].copy_from_slice(owner.as_ref());
+    data[64..72].copy_from_slice(&amount.to_le_bytes());
+    data[108] = 1; // initialised
+    solana_account::Account {
+        lamports: 2_039_280,
+        data,
+        owner: pk(token_program),
+        executable: false,
+        rent_epoch: 0,
+    }
+}
+
+impl Env {
+    pub fn add_token_account(&mut self, owner: &Pubkey, amount: u64) -> Pubkey {
+        self.add_token_account_for_mint(&self.usdc_mint.clone(), owner, amount, SPL_TOKEN)
+    }
+
+    pub fn add_token_account_for_mint(
+        &mut self,
+        mint: &Pubkey,
+        owner: &Pubkey,
+        amount: u64,
+        program: &str,
+    ) -> Pubkey {
+        let address = keypair().pubkey();
+        self.set_account(address, token_account(mint, owner, amount, program));
+        address
+    }
+
+    pub fn token_amount(&self, address: &Pubkey) -> u64 {
+        let data = self.account_data(address);
+        u64::from_le_bytes(data[64..72].try_into().unwrap())
+    }
+
+    /// Rewrite an Anchor account in place (bypassing the program) to reach states later prompts create.
+    pub fn update_account<T: anchor_lang::AccountSerialize + anchor_lang::AccountDeserialize>(
+        &mut self,
+        address: &Pubkey,
+        change: impl FnOnce(&mut T),
+    ) {
+        let mut account = self.svm.get_account(address).unwrap();
+        let mut value = T::try_deserialize(&mut account.data.as_slice()).unwrap();
+        change(&mut value);
+        let mut buffer = Vec::new();
+        value.try_serialize(&mut buffer).unwrap();
+        account.data[..buffer.len()].copy_from_slice(&buffer);
+        self.set_account(*address, account);
+    }
+
+    /// Protocol initialised, observer set v1, and the real market approved and enabled.
+    pub fn ready() -> Self {
+        let mut env = Self::new();
+        env.initialize_ok();
+        let admin = env.admin.pubkey();
+        let ix = env.ix_create_observer_set(
+            admin,
+            observer_set_pda(1),
+            vec![keypair().pubkey(), keypair().pubkey(), keypair().pubkey()],
+            2,
+        );
+        env.as_admin(&[ix]).expect("observer set");
+        let ix = env.ix_upsert_market(
+            admin,
+            env.pool,
+            env.base_mint,
+            env.usdc_mint,
+            market_pda(&env.pool),
+            [7u8; 32],
+        );
+        env.as_admin(&[ix]).expect("market");
+        let ix = env.ix_set_market_enabled(admin, market_pda(&env.pool), true);
+        env.as_admin(&[ix]).expect("enable");
+        env
+    }
+
+    /// A funded sponsor with a USDC account holding `usdc_raw`.
+    pub fn sponsor_with(&mut self, usdc_raw: u64) -> (Keypair, Pubkey) {
+        let sponsor = keypair();
+        self.svm.airdrop(&sponsor.pubkey(), 10_000_000_000).unwrap();
+        let account = self.add_token_account(&sponsor.pubkey(), usdc_raw);
+        (sponsor, account)
+    }
+
+    pub fn valid_mandate_args(&self, id: u64) -> mandate::CreateMandateArgs {
+        mandate::CreateMandateArgs {
+            mandate_id: id,
+            max_reward_raw: 1_000 * USDC,
+            bidding_ends_at: NOW + 3_600,
+            start_at: NOW + 7_200,
+            duration_seconds: 6 * 3_600,
+            epoch_seconds: 300,
+            max_effective_spread_bps: 400,
+            depth_band_bps: 500,
+            min_pool_buy_depth_quote_raw: 8_000 * USDC,
+            min_pool_sell_depth_quote_raw: 8_000 * USDC,
+            min_provider_quote_in_band_raw: 5_000 * USDC,
+            min_provider_base_quote_eq_in_band_raw: 5_000 * USDC,
+            probe_quote_raw: 10 * USDC,
+        }
+    }
+
+    pub fn ix_create_mandate(
+        &self,
+        sponsor: &Pubkey,
+        sponsor_usdc: &Pubkey,
+        args: mandate::CreateMandateArgs,
+    ) -> Instruction {
+        let mandate_key = mandate_pda(sponsor, args.mandate_id);
+        self.ix_create_mandate_with(sponsor, sponsor_usdc, args, mandate_key)
+    }
+
+    pub fn ix_create_mandate_with(
+        &self,
+        sponsor: &Pubkey,
+        sponsor_usdc: &Pubkey,
+        args: mandate::CreateMandateArgs,
+        mandate_key: Pubkey,
+    ) -> Instruction {
+        Instruction {
+            program_id: mandate::ID,
+            accounts: mandate::accounts::CreateMandate {
+                sponsor: *sponsor,
+                protocol: protocol_pda(),
+                market: market_pda(&self.pool),
+                observer_set: observer_set_pda(
+                    self.load::<mandate::ProtocolConfig>(&protocol_pda())
+                        .current_observer_set_version,
+                ),
+                usdc_mint: self.usdc_mint,
+                token_program: pk(SPL_TOKEN),
+                sponsor_usdc: *sponsor_usdc,
+                mandate: mandate_key,
+                vault: vault_pda(&mandate_key),
+                system_program: pk(SYSTEM_PROGRAM),
+            }
+            .to_account_metas(None),
+            data: mandate::instruction::CreateMandate { args }.data(),
+        }
+    }
+
+    pub fn ix_cancel_unawarded(
+        &self,
+        sponsor: &Pubkey,
+        mandate_key: &Pubkey,
+        sponsor_usdc: &Pubkey,
+    ) -> Instruction {
+        Instruction {
+            program_id: mandate::ID,
+            accounts: mandate::accounts::CancelUnawardedMandate {
+                sponsor: *sponsor,
+                protocol: protocol_pda(),
+                mandate: *mandate_key,
+                usdc_mint: self.usdc_mint,
+                token_program: pk(SPL_TOKEN),
+                vault: vault_pda(mandate_key),
+                sponsor_usdc: *sponsor_usdc,
+            }
+            .to_account_metas(None),
+            data: mandate::instruction::CancelUnawardedMandate {}.data(),
+        }
+    }
+
+    pub fn create_mandate(
+        &mut self,
+        sponsor: &Keypair,
+        sponsor_usdc: &Pubkey,
+        args: mandate::CreateMandateArgs,
+    ) -> Sent {
+        let ix = self.ix_create_mandate(&sponsor.pubkey(), sponsor_usdc, args);
+        let signer = Keypair::new_from_array(*sponsor.secret_bytes());
+        self.send(&[ix], &[&signer])
+    }
+
+    pub fn cancel_unawarded(
+        &mut self,
+        signer: &Keypair,
+        mandate_key: &Pubkey,
+        refund_to: &Pubkey,
+    ) -> Sent {
+        let ix = self.ix_cancel_unawarded(&signer.pubkey(), mandate_key, refund_to);
+        let signer = Keypair::new_from_array(*signer.secret_bytes());
+        self.send(&[ix], &[&signer])
+    }
+}

@@ -60,3 +60,34 @@ pub struct MarketEnabledChanged {
     pub market: Pubkey,
     pub enabled: bool,
 }
+
+#[event]
+pub struct MandateCreated {
+    pub mandate: Pubkey,
+    pub sponsor: Pubkey,
+    pub mandate_id: u64,
+    pub market_config: Pubkey,
+    pub observer_set: Pubkey,
+    pub vault: Pubkey,
+    pub max_reward_raw: u64,
+    pub bidding_ends_at: i64,
+    pub start_at: i64,
+    pub end_at: i64,
+    pub epoch_seconds: i64,
+    pub total_epochs: u32,
+    pub max_effective_spread_bps: u32,
+    pub depth_band_bps: u32,
+    pub min_pool_buy_depth_quote_raw: u64,
+    pub min_pool_sell_depth_quote_raw: u64,
+    pub min_provider_quote_in_band_raw: u64,
+    pub min_provider_base_quote_eq_in_band_raw: u64,
+    pub probe_quote_raw: u64,
+}
+
+#[event]
+pub struct MandateCancelled {
+    pub mandate: Pubkey,
+    pub sponsor: Pubkey,
+    /// Exact USDC returned to the sponsor.
+    pub refunded_raw: u64,
+}

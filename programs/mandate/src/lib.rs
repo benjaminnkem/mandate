@@ -1,14 +1,14 @@
 //! Mandate: market-quality procurement on Solana.
 //!
-//! This step implements the protocol foundation only: protocol configuration, two-step admin
-//! transfer, new-risk pause, immutable versioned observer sets and the approved market registry.
-//! Mandates, bids, attestations and settlement arrive in later steps (docs/BUILD_PROMPTS.md).
+//! Implemented so far: protocol configuration, two-step admin transfer, new-risk pause, immutable
+//! versioned observer sets, the approved market registry, and mandate creation with USDC escrow.
+//! Bids, award, positions, attestations and settlement arrive in later steps (docs/BUILD_PROMPTS.md).
 //!
 //! Authoritative design: docs/TECHNICAL_SPEC.md sections 5 and 6.
 //!
-//! Note on authority: no instruction in this program lets the admin move funds. Reward vaults do
-//! not exist yet, and when they do they will be owned by program-derived addresses with no admin
-//! withdrawal path.
+//! Note on authority: no instruction lets the admin move funds. Reward vaults are token accounts at
+//! program-derived addresses whose token authority is the mandate account itself, so only this
+//! program, signing with that account's seeds, can move an escrow.
 pub mod constants;
 pub mod error;
 pub mod events;
@@ -76,5 +76,15 @@ pub mod mandate {
     /// Admin: enable or disable a market.
     pub fn set_market_enabled(ctx: Context<SetMarketEnabled>, enabled: bool) -> Result<()> {
         instructions::market::handle_set_market_enabled(ctx, enabled)
+    }
+
+    /// Sponsor: create a mandate and escrow its maximum USDC reward atomically.
+    pub fn create_mandate(ctx: Context<CreateMandate>, args: CreateMandateArgs) -> Result<()> {
+        instructions::create_mandate::handle_create_mandate(ctx, args)
+    }
+
+    /// Sponsor: cancel a mandate no bid has been accepted on and take the escrow back.
+    pub fn cancel_unawarded_mandate(ctx: Context<CancelUnawardedMandate>) -> Result<()> {
+        instructions::cancel_unawarded_mandate::handle_cancel_unawarded_mandate(ctx)
     }
 }

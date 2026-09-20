@@ -19,7 +19,8 @@
     "inspect:prestocks": "pnpm --filter @mandate/scripts inspect:prestocks",
     "market:discover": "pnpm --filter @mandate/scripts market:discover",
     "market:measure": "pnpm --filter @mandate/scripts market:measure",
-    "market:positions": "pnpm --filter @mandate/scripts market:positions"
+    "market:positions": "pnpm --filter @mandate/scripts market:positions",
+    "idl:sync": "cp target/idl/mandate.json packages/solana/idl/mandate.json && UPDATE_VECTORS=1 cargo test -p program-tests --test client_vectors"
   },
   "devDependencies": {
     "prettier": "3.9.6",

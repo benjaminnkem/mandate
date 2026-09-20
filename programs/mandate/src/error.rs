@@ -29,6 +29,26 @@ pub enum MandateError {
     InvalidMarket,
     #[msg("Arithmetic overflow")]
     ArithmeticOverflow,
+    #[msg("Market is disabled")]
+    MarketDisabled,
+    #[msg("Timing parameters are invalid")]
+    InvalidTiming,
+    #[msg("Epoch length is invalid")]
+    InvalidEpochLength,
+    #[msg("Too many epochs")]
+    TooManyEpochs,
+    #[msg("Budget is invalid")]
+    InvalidBudget,
+    #[msg("A threshold is invalid")]
+    InvalidThreshold,
+    #[msg("Signer is not the sponsor")]
+    UnauthorizedSponsor,
+    #[msg("Mandate is not accepting bids")]
+    MandateNotBidding,
+    #[msg("A bid has already been accepted")]
+    BidAlreadyAccepted,
+    #[msg("Reward vault does not hold the expected balance")]
+    VaultMismatch,
     #[msg("Unexpected settlement error")]
     Unexpected,
 }
@@ -41,6 +61,11 @@ impl From<MandateCoreError> for MandateError {
             MandateCoreError::DuplicateObserver => Self::DuplicateObserver,
             MandateCoreError::InvalidMarket => Self::InvalidMarket,
             MandateCoreError::ArithmeticOverflow => Self::ArithmeticOverflow,
+            MandateCoreError::InvalidTiming => Self::InvalidTiming,
+            MandateCoreError::InvalidEpochLength => Self::InvalidEpochLength,
+            MandateCoreError::TooManyEpochs => Self::TooManyEpochs,
+            MandateCoreError::InvalidBudget => Self::InvalidBudget,
+            MandateCoreError::InvalidThreshold => Self::InvalidThreshold,
             _ => Self::Unexpected,
         }
     }

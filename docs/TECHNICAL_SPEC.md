@@ -354,6 +354,8 @@ pub struct Mandate {
     pub mandate_id: u64,
     pub market_config: Pubkey,
     pub observer_set: Pubkey,
+    /// The reward vault token account (PDA `[b"vault", mandate]`), owned by this account.
+    pub vault: Pubkey,
 
     pub created_at: i64,
     pub bidding_ends_at: i64,
@@ -614,7 +616,7 @@ Status `Bidding`.
 
 Sponsor only.
 
-Allowed only while no bid has been accepted and before configured cutoff.
+Allowed at any time while no bid has been accepted (status `Bidding`). "Before configured cutoff" is read as "until award": after the acceptance deadline an unawarded mandate can never be awarded, so refusing to refund it would strand the sponsor's funds, and no provider has committed anything before award (ADR 0012).
 
 Return entire reward vault to sponsor and status `Cancelled`.
 

@@ -1,0 +1,2113 @@
+{
+  "address": "T2GzQeoAYprQyUorm7r6jaRvmoPhtXuZ6vJYYBS1pzc",
+  "metadata": {
+    "name": "mandate",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Mandate: escrow, bids, attested epochs and exact reward settlement"
+  },
+  "instructions": [
+    {
+      "name": "accept_admin",
+      "docs": [
+        "Nominee: accept the admin role (step two of two)."
+      ],
+      "discriminator": [
+        112,
+        42,
+        45,
+        90,
+        116,
+        181,
+        13,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "protocol",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pending_admin",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancel_admin_transfer",
+      "docs": [
+        "Admin: withdraw a pending nomination."
+      ],
+      "discriminator": [
+        38,
+        131,
+        157,
+        31,
+        240,
+        137,
+        44,
+        215
+      ],
+      "accounts": [
+        {
+          "name": "protocol",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "protocol"
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancel_unawarded_mandate",
+      "docs": [
+        "Sponsor: cancel a mandate no bid has been accepted on and take the escrow back."
+      ],
+      "discriminator": [
+        157,
+        177,
+        110,
+        102,
+        210,
+        204,
+        147,
+        112
+      ],
+      "accounts": [
+        {
+          "name": "sponsor",
+          "docs": [
+            "Must be the mandate's sponsor. Also receives the vault's rent."
+          ],
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "mandate"
+          ]
+        },
+        {
+          "name": "protocol",
+          "docs": [
+            "Read for the USDC mint and token program only. Deliberately NOT gated on the pause flag: a",
+            "pause must never trap a sponsor's escrow."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mandate",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate.sponsor",
+                "account": "Mandate"
+              },
+              {
+                "kind": "account",
+                "path": "mandate.mandate_id",
+                "account": "Mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sponsor_usdc",
+          "docs": [
+            "Where the escrow returns. Any USDC account the sponsor owns."
+          ],
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_mandate",
+      "docs": [
+        "Sponsor: create a mandate and escrow its maximum USDC reward atomically."
+      ],
+      "discriminator": [
+        230,
+        170,
+        158,
+        68,
+        33,
+        169,
+        16,
+        158
+      ],
+      "accounts": [
+        {
+          "name": "sponsor",
+          "docs": [
+            "Signs, pays rent, and funds the escrow."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "protocol",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "market",
+          "docs": [
+            "The approved market. Must be enabled and quoted in the protocol's USDC."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.pool",
+                "account": "MarketConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "observer_set",
+          "docs": [
+            "The protocol's current observer set, snapshotted into the mandate. Its address is derived from",
+            "protocol state; before any set exists this account cannot be supplied."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  98,
+                  115,
+                  101,
+                  114,
+                  118,
+                  101,
+                  114,
+                  95,
+                  115,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "protocol.current_observer_set_version",
+                "account": "ProtocolConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "sponsor_usdc",
+          "docs": [
+            "The sponsor's USDC account the escrow is taken from."
+          ],
+          "writable": true
+        },
+        {
+          "name": "mandate",
+          "docs": [
+            "A duplicate mandate id for the same sponsor derives the same address and cannot be created."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "sponsor"
+              },
+              {
+                "kind": "arg",
+                "path": "args.mandate_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "The reward vault: a token account at a PDA whose token authority is the mandate account, so",
+            "only this program signing with the mandate's seeds can move the escrow."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "CreateMandateArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create_observer_set",
+      "docs": [
+        "Admin: create the next immutable observer set version and make it current."
+      ],
+      "discriminator": [
+        187,
+        200,
+        71,
+        60,
+        44,
+        57,
+        157,
+        33
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "docs": [
+            "The admin, who also pays rent."
+          ],
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "protocol"
+          ]
+        },
+        {
+          "name": "protocol",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "observer_set",
+          "docs": [
+            "The next sequential version. Its address is derived from protocol state, so a caller can",
+            "neither skip a version nor overwrite an existing one (the account must not exist)."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  98,
+                  115,
+                  101,
+                  114,
+                  118,
+                  101,
+                  114,
+                  95,
+                  115,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "protocol.current_observer_set_version.saturating_add(1)",
+                "account": "ProtocolConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "observers",
+          "type": {
+            "vec": "pubkey"
+          }
+        },
+        {
+          "name": "threshold",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "initialize_protocol",
+      "docs": [
+        "Initialise the protocol. Only the program's upgrade authority may call this."
+      ],
+      "discriminator": [
+        188,
+        233,
+        252,
+        106,
+        134,
+        146,
+        202,
+        91
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "Pays rent for the protocol account."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "upgrade_authority",
+          "docs": [
+            "Must be the program's upgrade authority, so nobody can front-run initialisation."
+          ],
+          "signer": true
+        },
+        {
+          "name": "protocol",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "usdc_token_program"
+        },
+        {
+          "name": "program",
+          "address": "T2GzQeoAYprQyUorm7r6jaRvmoPhtXuZ6vJYYBS1pzc"
+        },
+        {
+          "name": "program_data"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "InitializeProtocolArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "propose_admin",
+      "docs": [
+        "Admin: nominate a successor admin (step one of two)."
+      ],
+      "discriminator": [
+        121,
+        214,
+        199,
+        212,
+        87,
+        39,
+        117,
+        234
+      ],
+      "accounts": [
+        {
+          "name": "protocol",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "protocol"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "new_admin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "set_market_enabled",
+      "docs": [
+        "Admin: enable or disable a market."
+      ],
+      "discriminator": [
+        206,
+        60,
+        159,
+        159,
+        62,
+        242,
+        4,
+        82
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "protocol"
+          ]
+        },
+        {
+          "name": "protocol",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.pool",
+                "account": "MarketConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "enabled",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "set_paused_new_risk",
+      "docs": [
+        "Admin: pause or resume new risk."
+      ],
+      "discriminator": [
+        16,
+        232,
+        43,
+        13,
+        68,
+        221,
+        101,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "protocol",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "protocol"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "paused",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "upsert_market",
+      "docs": [
+        "Admin: create (disabled) or refresh an approved market."
+      ],
+      "discriminator": [
+        73,
+        122,
+        217,
+        17,
+        70,
+        77,
+        57,
+        39
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "protocol"
+          ]
+        },
+        {
+          "name": "protocol",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool",
+          "docs": [
+            "The Meteora DLMM pool. Must be owned by the configured DLMM program; its mints are read and",
+            "bound by `mandate_core::meteora` (fail-closed, verified against real mainnet bytes)."
+          ]
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "prestocks_metadata_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Mandate",
+      "discriminator": [
+        113,
+        216,
+        98,
+        159,
+        185,
+        63,
+        55,
+        18
+      ]
+    },
+    {
+      "name": "MarketConfig",
+      "discriminator": [
+        119,
+        255,
+        200,
+        88,
+        252,
+        82,
+        128,
+        24
+      ]
+    },
+    {
+      "name": "ObserverSet",
+      "discriminator": [
+        53,
+        28,
+        173,
+        99,
+        31,
+        217,
+        252,
+        5
+      ]
+    },
+    {
+      "name": "ProtocolConfig",
+      "discriminator": [
+        207,
+        91,
+        250,
+        28,
+        152,
+        179,
+        215,
+        209
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "AdminTransferAccepted",
+      "discriminator": [
+        79,
+        229,
+        204,
+        202,
+        134,
+        43,
+        177,
+        26
+      ]
+    },
+    {
+      "name": "AdminTransferCancelled",
+      "discriminator": [
+        93,
+        23,
+        69,
+        55,
+        216,
+        128,
+        106,
+        56
+      ]
+    },
+    {
+      "name": "AdminTransferProposed",
+      "discriminator": [
+        203,
+        168,
+        175,
+        51,
+        239,
+        104,
+        20,
+        85
+      ]
+    },
+    {
+      "name": "MandateCancelled",
+      "discriminator": [
+        124,
+        222,
+        69,
+        142,
+        90,
+        252,
+        142,
+        161
+      ]
+    },
+    {
+      "name": "MandateCreated",
+      "discriminator": [
+        140,
+        30,
+        209,
+        254,
+        5,
+        128,
+        147,
+        113
+      ]
+    },
+    {
+      "name": "MarketConfigured",
+      "discriminator": [
+        159,
+        123,
+        8,
+        235,
+        56,
+        45,
+        58,
+        119
+      ]
+    },
+    {
+      "name": "MarketEnabledChanged",
+      "discriminator": [
+        229,
+        105,
+        147,
+        190,
+        242,
+        200,
+        205,
+        250
+      ]
+    },
+    {
+      "name": "NewRiskPauseChanged",
+      "discriminator": [
+        1,
+        234,
+        226,
+        72,
+        219,
+        218,
+        204,
+        144
+      ]
+    },
+    {
+      "name": "ObserverSetCreated",
+      "discriminator": [
+        127,
+        254,
+        77,
+        48,
+        60,
+        40,
+        32,
+        123
+      ]
+    },
+    {
+      "name": "ProtocolInitialized",
+      "discriminator": [
+        173,
+        122,
+        168,
+        254,
+        9,
+        118,
+        76,
+        132
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "ProtocolPaused",
+      "msg": "New risk is paused"
+    },
+    {
+      "code": 6001,
+      "name": "UnauthorizedAdmin",
+      "msg": "Signer is not the protocol admin"
+    },
+    {
+      "code": 6002,
+      "name": "UnauthorizedInitializer",
+      "msg": "Signer is not the program upgrade authority"
+    },
+    {
+      "code": 6003,
+      "name": "UnauthorizedPendingAdmin",
+      "msg": "Signer is not the pending admin"
+    },
+    {
+      "code": 6004,
+      "name": "NoPendingAdmin",
+      "msg": "There is no pending admin transfer"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidAdmin",
+      "msg": "Invalid admin address"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidUsdcAccount",
+      "msg": "USDC mint or token program is invalid"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidProtocolParams",
+      "msg": "Protocol parameters are invalid"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidObserverSet",
+      "msg": "Observer set is invalid"
+    },
+    {
+      "code": 6009,
+      "name": "DuplicateObserver",
+      "msg": "Observer set contains a duplicate observer"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidMarket",
+      "msg": "Market is invalid"
+    },
+    {
+      "code": 6011,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6012,
+      "name": "MarketDisabled",
+      "msg": "Market is disabled"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidTiming",
+      "msg": "Timing parameters are invalid"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidEpochLength",
+      "msg": "Epoch length is invalid"
+    },
+    {
+      "code": 6015,
+      "name": "TooManyEpochs",
+      "msg": "Too many epochs"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidBudget",
+      "msg": "Budget is invalid"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidThreshold",
+      "msg": "A threshold is invalid"
+    },
+    {
+      "code": 6018,
+      "name": "UnauthorizedSponsor",
+      "msg": "Signer is not the sponsor"
+    },
+    {
+      "code": 6019,
+      "name": "MandateNotBidding",
+      "msg": "Mandate is not accepting bids"
+    },
+    {
+      "code": 6020,
+      "name": "BidAlreadyAccepted",
+      "msg": "A bid has already been accepted"
+    },
+    {
+      "code": 6021,
+      "name": "VaultMismatch",
+      "msg": "Reward vault does not hold the expected balance"
+    },
+    {
+      "code": 6022,
+      "name": "Unexpected",
+      "msg": "Unexpected settlement error"
+    }
+  ],
+  "types": [
+    {
+      "name": "AdminTransferAccepted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "previous_admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_admin",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AdminTransferCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "cancelled_pending_admin",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AdminTransferProposed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_admin",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateMandateArgs",
+      "docs": [
+        "Everything a sponsor chooses. Nothing about the reward asset is client-controlled: the USDC mint",
+        "and token program come from `ProtocolConfig`."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mandate_id",
+            "type": "u64"
+          },
+          {
+            "name": "max_reward_raw",
+            "type": "u64"
+          },
+          {
+            "name": "bidding_ends_at",
+            "type": "i64"
+          },
+          {
+            "name": "start_at",
+            "type": "i64"
+          },
+          {
+            "name": "duration_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "epoch_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "max_effective_spread_bps",
+            "type": "u32"
+          },
+          {
+            "name": "depth_band_bps",
+            "type": "u32"
+          },
+          {
+            "name": "min_pool_buy_depth_quote_raw",
+            "type": "u64"
+          },
+          {
+            "name": "min_pool_sell_depth_quote_raw",
+            "type": "u64"
+          },
+          {
+            "name": "min_provider_quote_in_band_raw",
+            "type": "u64"
+          },
+          {
+            "name": "min_provider_base_quote_eq_in_band_raw",
+            "type": "u64"
+          },
+          {
+            "name": "probe_quote_raw",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeProtocolArgs",
+      "docs": [
+        "All protocol bounds. Validated by `mandate_core::protocol::validate_protocol_params`."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "docs": [
+              "The admin identity. Deliberately an argument, separate from the upgrade authority that is",
+              "allowed to initialise: the deploy key must not double as the day-to-day admin."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "dlmm_program",
+            "docs": [
+              "The Meteora DLMM program market pools must be owned by."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "min_budget_raw",
+            "type": "u64"
+          },
+          {
+            "name": "max_budget_raw",
+            "type": "u64"
+          },
+          {
+            "name": "min_epoch_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "max_epoch_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "max_duration_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "max_epochs",
+            "type": "u32"
+          },
+          {
+            "name": "max_spread_bps",
+            "type": "u32"
+          },
+          {
+            "name": "max_depth_band_bps",
+            "type": "u32"
+          },
+          {
+            "name": "max_positions",
+            "type": "u8"
+          },
+          {
+            "name": "min_probe_quote_raw",
+            "type": "u64"
+          },
+          {
+            "name": "max_probe_quote_raw",
+            "type": "u64"
+          },
+          {
+            "name": "min_start_lead_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "position_lock_buffer_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "min_setup_window_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "unavailable_recovery_seconds",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Mandate",
+      "docs": [
+        "One market-quality contract. PDA `[b\"mandate\", sponsor, mandate_id_le]`.",
+        "",
+        "Economic terms (thresholds, schedule, reward) are fixed at creation and never change. The",
+        "accepted-provider fields and reward split are set once at award and are immutable afterwards.",
+        "The reward vault is a separate PDA token account owned by this account, so only this program,",
+        "signing with this account's seeds, can ever move the escrow."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "sponsor",
+            "type": "pubkey"
+          },
+          {
+            "name": "mandate_id",
+            "type": "u64"
+          },
+          {
+            "name": "market_config",
+            "type": "pubkey"
+          },
+          {
+            "name": "observer_set",
+            "docs": [
+              "The exact observer set version snapshotted at creation."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "vault",
+            "docs": [
+              "The reward vault token account (PDA `[b\"vault\", mandate]`)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "bidding_ends_at",
+            "type": "i64"
+          },
+          {
+            "name": "start_at",
+            "type": "i64"
+          },
+          {
+            "name": "epoch_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "total_epochs",
+            "type": "u32"
+          },
+          {
+            "name": "end_at",
+            "type": "i64"
+          },
+          {
+            "name": "max_reward_raw",
+            "type": "u64"
+          },
+          {
+            "name": "accepted_reward_raw",
+            "type": "u64"
+          },
+          {
+            "name": "base_epoch_reward_raw",
+            "type": "u64"
+          },
+          {
+            "name": "final_epoch_extra_raw",
+            "type": "u64"
+          },
+          {
+            "name": "max_effective_spread_bps",
+            "type": "u32"
+          },
+          {
+            "name": "depth_band_bps",
+            "type": "u32"
+          },
+          {
+            "name": "min_pool_buy_depth_quote_raw",
+            "type": "u64"
+          },
+          {
+            "name": "min_pool_sell_depth_quote_raw",
+            "type": "u64"
+          },
+          {
+            "name": "min_provider_quote_in_band_raw",
+            "type": "u64"
+          },
+          {
+            "name": "min_provider_base_quote_eq_in_band_raw",
+            "type": "u64"
+          },
+          {
+            "name": "probe_quote_raw",
+            "type": "u64"
+          },
+          {
+            "name": "accepted_bid",
+            "docs": [
+              "`Pubkey::default()` until a bid is accepted."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "provider",
+            "type": "pubkey"
+          },
+          {
+            "name": "position_set",
+            "type": "pubkey"
+          },
+          {
+            "name": "compliant_epochs",
+            "type": "u32"
+          },
+          {
+            "name": "noncompliant_epochs",
+            "type": "u32"
+          },
+          {
+            "name": "unavailable_epochs",
+            "type": "u32"
+          },
+          {
+            "name": "finalized_epochs",
+            "type": "u32"
+          },
+          {
+            "name": "earned_reward_raw",
+            "type": "u64"
+          },
+          {
+            "name": "forfeited_reward_raw",
+            "docs": [
+              "Sum of rewards of epochs finalized NonCompliant or Unavailable (docs/adr/0009)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "claimed_reward_raw",
+            "type": "u64"
+          },
+          {
+            "name": "sponsor_withdrawn_raw",
+            "type": "u64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "MandateStatus"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MandateCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "sponsor",
+            "type": "pubkey"
+          },
+          {
+            "name": "refunded_raw",
+            "docs": [
+              "Exact USDC returned to the sponsor."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MandateCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "sponsor",
+            "type": "pubkey"
+          },
+          {
+            "name": "mandate_id",
+            "type": "u64"
+          },
+          {
+            "name": "market_config",
+            "type": "pubkey"
+          },
+          {
+            "name": "observer_set",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "max_reward_raw",
+            "type": "u64"
+          },
+          {
+            "name": "bidding_ends_at",
+            "type": "i64"
+          },
+          {
+            "name": "start_at",
+            "type": "i64"
+          },
+          {
+            "name": "end_at",
+            "type": "i64"
+          },
+          {
+            "name": "epoch_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "total_epochs",
+            "type": "u32"
+          },
+          {
+            "name": "max_effective_spread_bps",
+            "type": "u32"
+          },
+          {
+            "name": "depth_band_bps",
+            "type": "u32"
+          },
+          {
+            "name": "min_pool_buy_depth_quote_raw",
+            "type": "u64"
+          },
+          {
+            "name": "min_pool_sell_depth_quote_raw",
+            "type": "u64"
+          },
+          {
+            "name": "min_provider_quote_in_band_raw",
+            "type": "u64"
+          },
+          {
+            "name": "min_provider_base_quote_eq_in_band_raw",
+            "type": "u64"
+          },
+          {
+            "name": "probe_quote_raw",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MandateStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Bidding"
+          },
+          {
+            "name": "Awarded"
+          },
+          {
+            "name": "Active"
+          },
+          {
+            "name": "AwaitingFinalization"
+          },
+          {
+            "name": "Closed"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MarketConfig",
+      "docs": [
+        "An approved market. PDA `[b\"market\", pool]`.",
+        "",
+        "The pool, mints, decimals, token programs and orientation are bound at creation and never change.",
+        "Approval is an allowlist and risk control, not proof of legal eligibility."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "enabled",
+            "type": "bool"
+          },
+          {
+            "name": "venue_type",
+            "type": {
+              "defined": {
+                "name": "VenueType"
+              }
+            }
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_token_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_decimals",
+            "type": "u8"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_token_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_decimals",
+            "type": "u8"
+          },
+          {
+            "name": "base_is_x",
+            "docs": [
+              "True when the base (PreStocks) token is the pool's token X. Read from the pool at approval."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "prestocks_metadata_hash",
+            "docs": [
+              "Hash of the dated off-chain review evidence (PreStocks API object, mint inspection, pool checks)."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "reviewed_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MarketConfigured",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "market",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_decimals",
+            "type": "u8"
+          },
+          {
+            "name": "base_is_x",
+            "type": "bool"
+          },
+          {
+            "name": "prestocks_metadata_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "enabled",
+            "type": "bool"
+          },
+          {
+            "name": "reviewed_at",
+            "type": "i64"
+          },
+          {
+            "name": "created",
+            "docs": [
+              "True when this call created the market, false when it refreshed an existing one."
+            ],
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MarketEnabledChanged",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "market",
+            "type": "pubkey"
+          },
+          {
+            "name": "enabled",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NewRiskPauseChanged",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "paused",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ObserverSet",
+      "docs": [
+        "One immutable observer set version. PDA `[b\"observer_set\", version_le_bytes]`.",
+        "",
+        "No instruction mutates an `ObserverSet` after creation: a change of observers is a *new* version,",
+        "and only mandates created afterwards snapshot it. Existing mandates keep the version they bound."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version_tag",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "version",
+            "type": "u32"
+          },
+          {
+            "name": "observer_count",
+            "type": "u8"
+          },
+          {
+            "name": "threshold",
+            "type": "u8"
+          },
+          {
+            "name": "observers",
+            "docs": [
+              "Unused slots are `Pubkey::default()`."
+            ],
+            "type": {
+              "array": [
+                "pubkey",
+                5
+              ]
+            }
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ObserverSetCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "observer_set",
+            "type": "pubkey"
+          },
+          {
+            "name": "version",
+            "type": "u32"
+          },
+          {
+            "name": "observer_count",
+            "type": "u8"
+          },
+          {
+            "name": "threshold",
+            "type": "u8"
+          },
+          {
+            "name": "observers",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProtocolConfig",
+      "docs": [
+        "Global configuration. PDA `[b\"protocol\"]`. Holds protocol bounds and the admin identity.",
+        "",
+        "The admin can configure markets and observer sets and pause *new* risk. The admin has no",
+        "instruction that moves reward-vault funds (none exists in the program), and cannot alter any",
+        "existing mandate's terms."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_admin",
+            "docs": [
+              "`Pubkey::default()` when no transfer is pending."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_token_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "dlmm_program",
+            "docs": [
+              "The Meteora DLMM program a market's pool account must be owned by."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "paused_new_risk",
+            "type": "bool"
+          },
+          {
+            "name": "min_budget_raw",
+            "type": "u64"
+          },
+          {
+            "name": "max_budget_raw",
+            "type": "u64"
+          },
+          {
+            "name": "min_epoch_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "max_epoch_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "max_duration_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "max_epochs",
+            "type": "u32"
+          },
+          {
+            "name": "max_spread_bps",
+            "type": "u32"
+          },
+          {
+            "name": "max_depth_band_bps",
+            "type": "u32"
+          },
+          {
+            "name": "max_positions",
+            "type": "u8"
+          },
+          {
+            "name": "min_probe_quote_raw",
+            "type": "u64"
+          },
+          {
+            "name": "max_probe_quote_raw",
+            "type": "u64"
+          },
+          {
+            "name": "min_start_lead_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "position_lock_buffer_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "min_setup_window_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "unavailable_recovery_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "current_observer_set_version",
+            "docs": [
+              "Latest observer set version; `0` means none has been created yet. New mandates snapshot this."
+            ],
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProtocolInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "protocol",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "dlmm_program",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "VenueType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "MeteoraDlmm"
+          }
+        ]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "MANDATE_SEED",
+      "type": "bytes",
+      "value": "[109, 97, 110, 100, 97, 116, 101]"
+    },
+    {
+      "name": "MARKET_SEED",
+      "type": "bytes",
+      "value": "[109, 97, 114, 107, 101, 116]"
+    },
+    {
+      "name": "OBSERVER_SET_SEED",
+      "type": "bytes",
+      "value": "[111, 98, 115, 101, 114, 118, 101, 114, 95, 115, 101, 116]"
+    },
+    {
+      "name": "PROTOCOL_SEED",
+      "docs": [
+        "PDA seeds. Every account address in the protocol is derived from these; nothing is chosen by a caller."
+      ],
+      "type": "bytes",
+      "value": "[112, 114, 111, 116, 111, 99, 111, 108]"
+    },
+    {
+      "name": "VAULT_SEED",
+      "type": "bytes",
+      "value": "[118, 97, 117, 108, 116]"
+    }
+  ]
+}

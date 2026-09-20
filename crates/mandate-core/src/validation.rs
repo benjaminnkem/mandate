@@ -63,6 +63,11 @@ impl ErrorSet {
         }
     }
 
+    /// The highest-priority error (declaration order), for callers that can return only one.
+    pub fn first(&self) -> Option<MandateCoreError> {
+        self.iter().next()
+    }
+
     /// Members in declaration order.
     pub fn iter(&self) -> impl Iterator<Item = MandateCoreError> + '_ {
         MandateCoreError::ALL
