@@ -167,6 +167,41 @@ pub struct UnactivatedMandateRefunded {
 }
 
 #[event]
+pub struct ProviderRewardClaimed {
+    pub mandate: Pubkey,
+    pub provider: Pubkey,
+    pub amount_raw: u64,
+    pub total_claimed_raw: u64,
+    pub vault_balance_raw: u64,
+}
+
+#[event]
+pub struct MandateClosed {
+    pub mandate: Pubkey,
+    pub sponsor: Pubkey,
+    pub earned_reward_raw: u64,
+    pub claimed_reward_raw: u64,
+    pub sponsor_withdrawn_raw: u64,
+}
+
+#[event]
+pub struct EpochFinalized {
+    pub mandate: Pubkey,
+    pub epoch_index: u32,
+    /// 0 = Compliant, 1 = NonCompliant, 2 = Unavailable.
+    pub outcome: u8,
+    pub reward_earned_raw: u64,
+    pub reward_forfeited_raw: u64,
+    pub failure_bits: u8,
+    pub attestation_count: u8,
+    pub payload_hash: [u8; 32],
+    pub evidence_hash: [u8; 32],
+    pub finalized_epochs: u32,
+    pub earned_reward_raw: u64,
+    pub finalized_by: Pubkey,
+}
+
+#[event]
 pub struct EpochAttested {
     pub attestation: Pubkey,
     pub mandate: Pubkey,

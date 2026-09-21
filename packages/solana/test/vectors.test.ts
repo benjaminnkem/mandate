@@ -13,6 +13,11 @@ import {
   registerPositions,
   cancelBid,
   closeBid,
+  claimProviderReward,
+  closeMandate,
+  finalizeEpoch,
+  finalizeUnavailableEpoch,
+  findEpochResultPda,
   findAttestationPda,
   findBidPda,
   submitAttestation,
@@ -261,6 +266,38 @@ describe("the TypeScript client agrees with the Rust program", () => {
     );
   });
 
+  it("encodes epoch finalization, claims and closing identically", () => {
+    const mandate = findMandatePda(sponsor, 42n);
+    const observers = [filled(30), filled(32)];
+    expect(findEpochResultPda(mandate, 7).toBase58()).toBe(vectors.pdas["epochResult42e7"]);
+    expectMatch(
+      "finalize_epoch",
+      finalizeEpoch({
+        payer: filled(31),
+        mandate,
+        observerSet: findObserverSetPda(1),
+        positionSet: findPositionSetPda(mandate),
+        epochIndex: 7,
+        attestations: observers.map((o) => findAttestationPda(mandate, 7, o)),
+      }),
+    );
+    expectMatch(
+      "finalize_unavailable_epoch",
+      finalizeUnavailableEpoch({ payer: filled(31), mandate, epochIndex: 7 }),
+    );
+    expectMatch(
+      "claim_provider_reward",
+      claimProviderReward({
+        provider: filled(14),
+        providerUsdc: filled(15),
+        mandate,
+        usdcMint,
+        amountRaw: 12_500_000n,
+      }),
+    );
+    expectMatch("close_mandate", closeMandate({ caller: filled(31), mandate, sponsor, usdcMint }));
+  });
+
   it("covers every instruction the Rust side produced a vector for", () => {
     expect(vectors.instructions.map((i) => i.instruction).sort()).toEqual(
       [
@@ -283,6 +320,10 @@ describe("the TypeScript client agrees with the Rust program", () => {
         "activate_mandate",
         "refund_unactivated_mandate",
         "submit_attestation",
+        "finalize_epoch",
+        "finalize_unavailable_epoch",
+        "claim_provider_reward",
+        "close_mandate",
       ].sort(),
     );
   });

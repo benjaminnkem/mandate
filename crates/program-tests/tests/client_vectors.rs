@@ -56,6 +56,25 @@ fn build() -> Value {
         )
         .0
     };
+    let epoch_result = |m: &Pubkey, e: u32| {
+        Pubkey::find_program_address(
+            &[mandate::EPOCH_RESULT_SEED, m.as_ref(), &e.to_le_bytes()],
+            &program,
+        )
+        .0
+    };
+    let attestation = |m: &Pubkey, e: u32, o: &Pubkey| {
+        Pubkey::find_program_address(
+            &[
+                mandate::ATTESTATION_SEED,
+                m.as_ref(),
+                &e.to_le_bytes(),
+                o.as_ref(),
+            ],
+            &program,
+        )
+        .0
+    };
     let vault =
         |m: &Pubkey| Pubkey::find_program_address(&[mandate::VAULT_SEED, m.as_ref()], &program).0;
     let system = key(0);
@@ -374,6 +393,70 @@ fn build() -> Value {
             }
             .data(),
         ),
+        case(
+            "finalize_epoch",
+            {
+                let mut accounts = mandate::accounts::FinalizeEpoch {
+                    payer: key(31),
+                    mandate: m1,
+                    observer_set: observer_set(1),
+                    position_set: position_set(&m1),
+                    epoch_result: epoch_result(&m1, 7),
+                    system_program: system,
+                }
+                .to_account_metas(None);
+                for observer in [30u8, 32] {
+                    accounts.push(anchor_lang::prelude::AccountMeta::new_readonly(
+                        attestation(&m1, 7, &key(observer)),
+                        false,
+                    ));
+                }
+                accounts
+            },
+            mandate::instruction::FinalizeEpoch { epoch_index: 7 }.data(),
+        ),
+        case(
+            "finalize_unavailable_epoch",
+            mandate::accounts::FinalizeUnavailableEpoch {
+                payer: key(31),
+                mandate: m1,
+                epoch_result: epoch_result(&m1, 7),
+                system_program: system,
+            }
+            .to_account_metas(None),
+            mandate::instruction::FinalizeUnavailableEpoch { epoch_index: 7 }.data(),
+        ),
+        case(
+            "claim_provider_reward",
+            mandate::accounts::ClaimProviderReward {
+                provider,
+                protocol,
+                mandate: m1,
+                usdc_mint: usdc,
+                token_program: token,
+                vault: vault(&m1),
+                provider_usdc: key(15),
+            }
+            .to_account_metas(None),
+            mandate::instruction::ClaimProviderReward {
+                amount_raw: 12_500_000,
+            }
+            .data(),
+        ),
+        case(
+            "close_mandate",
+            mandate::accounts::CloseMandate {
+                caller: key(31),
+                protocol,
+                mandate: m1,
+                usdc_mint: usdc,
+                token_program: token,
+                vault: vault(&m1),
+                rent_receiver: sponsor,
+            }
+            .to_account_metas(None),
+            mandate::instruction::CloseMandate {}.data(),
+        ),
     ];
 
     json!({
@@ -394,6 +477,7 @@ fn build() -> Value {
             "bid42x14n3": bid(&provider, 3).to_string(),
             "positionSet42": position_set(&m1).to_string(),
             "attestation42e7o30": Pubkey::find_program_address(&[mandate::ATTESTATION_SEED, m1.as_ref(), &7u32.to_le_bytes(), key(30).as_ref()], &program).0.to_string(),
+            "epochResult42e7": epoch_result(&m1, 7).to_string(),
             "programData": program_data.to_string(),
         },
         "instructions": instructions,

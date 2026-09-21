@@ -7,3 +7,4 @@ export * from "./build.ts";
 export * from "./idl.ts";
 export * from "./instructions.ts";
 export * from "./pda.ts";
+export * from "./reconcile.ts";

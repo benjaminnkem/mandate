@@ -13,11 +13,13 @@
     "market:measure": "node src/measure-pool.ts",
     "market:positions": "node src/list-positions.ts",
     "positions:inspect": "node src/inspect-positions.ts",
-    "observers:provision": "node src/provision-observer-keys.ts"
+    "observers:provision": "node src/provision-observer-keys.ts",
+    "reconcile:mandate": "node src/reconcile-mandate.ts"
   },
   "dependencies": {
     "@mandate/config": "workspace:*",
     "@mandate/prestocks": "workspace:*",
+    "@mandate/solana": "workspace:*",
     "@solana/web3.js": "1.99.0",
     "@mandate/meteora": "workspace:*"
   },

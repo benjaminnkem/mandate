@@ -1138,3 +1138,200 @@ impl Live {
         self.env.send(&[ix], &[&signer])
     }
 }
+
+// ---- epoch finalization (Prompt 9) -----------------------------------------------------------
+
+pub fn epoch_result_pda(mandate_key: &Pubkey, epoch: u32) -> Pubkey {
+    Pubkey::find_program_address(
+        &[
+            mandate::EPOCH_RESULT_SEED,
+            mandate_key.as_ref(),
+            &epoch.to_le_bytes(),
+        ],
+        &mandate::ID,
+    )
+    .0
+}
+
+impl Live {
+    /// End of epoch `epoch` (exclusive) and its recovery deadline.
+    pub fn epoch_end(epoch: u32) -> i64 {
+        START_AT + EPOCH_SECONDS * i64::from(epoch + 1)
+    }
+
+    /// Have the observers at these indexes attest identical `args`, at a time inside the epoch.
+    pub fn attest_many(&mut self, indexes: &[usize], args: &mandate::SubmitAttestationArgs) {
+        self.env.warp_time(Self::epoch_end(args.epoch_index) - 1);
+        for i in indexes {
+            self.attest(*i, args.clone()).expect("attest");
+        }
+    }
+
+    pub fn ix_finalize_with(
+        &self,
+        epoch: u32,
+        observer_set: Pubkey,
+        attestations: &[Pubkey],
+    ) -> Instruction {
+        let m: mandate::Mandate = self.env.load(&self.mandate);
+        let mut accounts = mandate::accounts::FinalizeEpoch {
+            payer: self.env.payer.pubkey(),
+            mandate: self.mandate,
+            observer_set,
+            position_set: m.position_set,
+            epoch_result: epoch_result_pda(&self.mandate, epoch),
+            system_program: pk(SYSTEM_PROGRAM),
+        }
+        .to_account_metas(None);
+        accounts.extend(
+            attestations
+                .iter()
+                .map(|a| anchor_lang::prelude::AccountMeta::new_readonly(*a, false)),
+        );
+        Instruction {
+            program_id: mandate::ID,
+            accounts,
+            data: mandate::instruction::FinalizeEpoch { epoch_index: epoch }.data(),
+        }
+    }
+
+    pub fn finalize(&mut self, epoch: u32, attestations: &[Pubkey]) -> Sent {
+        let m: mandate::Mandate = self.env.load(&self.mandate);
+        let ix = self.ix_finalize_with(epoch, m.observer_set, attestations);
+        self.env.send(&[ix], &[])
+    }
+
+    /// Finalize using the attestations of the observers at these indexes.
+    pub fn finalize_with_observers(&mut self, epoch: u32, indexes: &[usize]) -> Sent {
+        let list: Vec<Pubkey> = indexes
+            .iter()
+            .map(|i| attestation_pda(&self.mandate, epoch, &self.observers[*i].pubkey()))
+            .collect();
+        self.finalize(epoch, &list)
+    }
+
+    pub fn finalize_unavailable(&mut self, epoch: u32) -> Sent {
+        let ix = Instruction {
+            program_id: mandate::ID,
+            accounts: mandate::accounts::FinalizeUnavailableEpoch {
+                payer: self.env.payer.pubkey(),
+                mandate: self.mandate,
+                epoch_result: epoch_result_pda(&self.mandate, epoch),
+                system_program: pk(SYSTEM_PROGRAM),
+            }
+            .to_account_metas(None),
+            data: mandate::instruction::FinalizeUnavailableEpoch { epoch_index: epoch }.data(),
+        };
+        self.env.send(&[ix], &[])
+    }
+
+    pub fn result(&self, epoch: u32) -> mandate::EpochResult {
+        self.env.load(&epoch_result_pda(&self.mandate, epoch))
+    }
+
+    pub fn mandate_state(&self) -> mandate::Mandate {
+        self.env.load(&self.mandate)
+    }
+}
+
+// ---- exits: claims, sponsor refunds, closing (Prompt 10) -------------------------------------
+
+impl Live {
+    pub fn provider_usdc(&mut self) -> Pubkey {
+        let owner = self.provider.pubkey();
+        self.env.add_token_account(&owner, 0)
+    }
+
+    pub fn ix_claim(&self, provider: &Pubkey, provider_usdc: &Pubkey, amount: u64) -> Instruction {
+        Instruction {
+            program_id: mandate::ID,
+            accounts: mandate::accounts::ClaimProviderReward {
+                provider: *provider,
+                protocol: protocol_pda(),
+                mandate: self.mandate,
+                usdc_mint: self.env.usdc_mint,
+                token_program: pk(SPL_TOKEN),
+                vault: vault_pda(&self.mandate),
+                provider_usdc: *provider_usdc,
+            }
+            .to_account_metas(None),
+            data: mandate::instruction::ClaimProviderReward { amount_raw: amount }.data(),
+        }
+    }
+
+    pub fn claim(&mut self, provider_usdc: &Pubkey, amount: u64) -> Sent {
+        let signer = Keypair::new_from_array(*self.provider.secret_bytes());
+        let ix = self.ix_claim(&signer.pubkey(), provider_usdc, amount);
+        self.env.send(&[ix], &[&signer])
+    }
+
+    pub fn sponsor_withdraw(&mut self, amount: u64) -> Sent {
+        let signer = Keypair::new_from_array(*self.sponsor.secret_bytes());
+        let ix = self.env.ix_withdraw_surplus(
+            &signer.pubkey(),
+            &self.mandate,
+            &self.sponsor_usdc,
+            amount,
+        );
+        self.env.send(&[ix], &[&signer])
+    }
+
+    pub fn ix_close(&self, rent_receiver: Pubkey) -> Instruction {
+        Instruction {
+            program_id: mandate::ID,
+            accounts: mandate::accounts::CloseMandate {
+                caller: self.env.payer.pubkey(),
+                protocol: protocol_pda(),
+                mandate: self.mandate,
+                usdc_mint: self.env.usdc_mint,
+                token_program: pk(SPL_TOKEN),
+                vault: vault_pda(&self.mandate),
+                rent_receiver,
+            }
+            .to_account_metas(None),
+            data: mandate::instruction::CloseMandate {}.data(),
+        }
+    }
+
+    pub fn close(&mut self) -> Sent {
+        let ix = self.ix_close(self.sponsor.pubkey());
+        self.env.send(&[ix], &[])
+    }
+
+    /// Shrink the mandate to `epochs` epochs and set its accepted reward, so settlement scenarios stay small.
+    pub fn reshape(&mut self, epochs: u32, accepted: u64) {
+        let key = self.mandate;
+        self.env.update_account::<mandate::Mandate>(&key, |m| {
+            m.total_epochs = epochs;
+            m.accepted_reward_raw = accepted;
+        });
+    }
+
+    /// Finalize `epoch` as `Compliant`, `NonCompliant` (`Some(false)`) or `Unavailable` (`None`).
+    pub fn settle(&mut self, epoch: u32, compliant: Option<bool>) {
+        match compliant {
+            None => {
+                self.env.warp_time(Live::epoch_end(epoch) + RECOVERY);
+                self.finalize_unavailable(epoch).expect("unavailable");
+            }
+            Some(ok) => {
+                let mut m = mandate::EpochMetrics {
+                    effective_spread_bps: 300,
+                    pool_buy_depth_quote_raw: 9_000 * USDC,
+                    pool_sell_depth_quote_raw: 9_000 * USDC,
+                    provider_quote_in_band_raw: 6_000 * USDC,
+                    provider_base_quote_eq_in_band_raw: 6_000 * USDC,
+                };
+                if !ok {
+                    m.effective_spread_bps = 401;
+                }
+                let mut a = args_for(epoch, Live::epoch_end(epoch) - 5);
+                a.metrics = m;
+                self.attest_many(&[0, 1], &a);
+                self.env.warp_time(Live::epoch_end(epoch));
+                self.finalize_with_observers(epoch, &[0, 1])
+                    .expect("finalize");
+            }
+        }
+    }
+}

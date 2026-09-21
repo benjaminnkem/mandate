@@ -48,6 +48,10 @@ fn the_instruction_set_is_exactly_the_reviewed_one() {
         "activate_mandate",
         "refund_unactivated_mandate",
         "submit_attestation",
+        "finalize_epoch",
+        "finalize_unavailable_epoch",
+        "claim_provider_reward",
+        "close_mandate",
     ]
     .iter()
     .map(|s| s.to_string())
@@ -59,14 +63,24 @@ fn the_instruction_set_is_exactly_the_reviewed_one() {
     );
 }
 
-/// Instructions allowed to touch token accounts, each callable only by the sponsor. Extend this list
-/// deliberately (and review it) whenever a new fund-moving instruction is added.
-const FUND_MOVING: [&str; 4] = [
-    "create_mandate",
-    "cancel_unawarded_mandate",
-    "withdraw_surplus_after_award",
-    "refund_unactivated_mandate",
+/// Instructions allowed to touch token accounts, with the one role that must sign each. Extend this list
+/// deliberately (and review it) whenever a new fund-moving instruction is added. `close_mandate` is callable by
+/// anyone (`caller`) because it can only close an already-empty vault and pays the rent to the sponsor.
+const FUND_MOVING: [(&str, &str); 6] = [
+    ("create_mandate", "sponsor"),
+    ("cancel_unawarded_mandate", "sponsor"),
+    ("withdraw_surplus_after_award", "sponsor"),
+    ("refund_unactivated_mandate", "sponsor"),
+    ("claim_provider_reward", "provider"),
+    ("close_mandate", "caller"),
 ];
+
+fn fund_moving(name: &str) -> Option<&'static str> {
+    FUND_MOVING
+        .iter()
+        .find(|(n, _)| *n == name)
+        .map(|(_, r)| *r)
+}
 
 #[test]
 fn only_reviewed_instructions_touch_tokens_and_none_takes_an_admin() {
@@ -83,7 +97,7 @@ fn only_reviewed_instructions_touch_tokens_and_none_takes_an_admin() {
             .any(|a| a.contains("vault") || a.ends_with("_usdc"));
         if takes_token_account {
             assert!(
-                FUND_MOVING.contains(&name),
+                fund_moving(name).is_some(),
                 "{name} takes a token account but is not on the reviewed fund-moving list"
             );
             assert!(
@@ -92,15 +106,19 @@ fn only_reviewed_instructions_touch_tokens_and_none_takes_an_admin() {
                     .any(|a| a == "admin" || a == "pending_admin" || a == "upgrade_authority"),
                 "{name} moves funds but also takes an admin-like account: {accounts:?}"
             );
+            let role = fund_moving(name).unwrap();
             assert!(
-                accounts.iter().any(|a| a == "sponsor"),
-                "{name} must be signed by the sponsor"
+                accounts.iter().any(|a| a == role),
+                "{name} must be signed by {role}"
             );
         }
         let _ = touches_tokens;
         assert!(
-            FUND_MOVING.contains(&name)
-                || !(name.contains("withdraw") || name.contains("sweep") || name.contains("seize")),
+            fund_moving(name).is_some()
+                || !(name.contains("withdraw")
+                    || name.contains("sweep")
+                    || name.contains("seize")
+                    || name.contains("claim")),
             "{name} looks like an unreviewed fund-moving instruction"
         );
     }
@@ -178,6 +196,7 @@ fn account_types_are_the_reviewed_ones() {
         "Bid",
         "PositionSet",
         "EpochAttestation",
+        "EpochResult",
     ]
     .iter()
     .map(|s| s.to_string())

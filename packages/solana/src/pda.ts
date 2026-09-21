@@ -56,6 +56,12 @@ export const findBidPda = (
 export const findPositionSetPda = (mandate: PublicKey, programId = MANDATE_PROGRAM_ID): PublicKey =>
   derive([utf8("position_set"), mandate.toBytes()], programId);
 
+export const findEpochResultPda = (
+  mandate: PublicKey,
+  epochIndex: number,
+  programId = MANDATE_PROGRAM_ID,
+): PublicKey => derive([utf8("epoch_result"), mandate.toBytes(), u32le(epochIndex)], programId);
+
 export const findAttestationPda = (
   mandate: PublicKey,
   epochIndex: number,

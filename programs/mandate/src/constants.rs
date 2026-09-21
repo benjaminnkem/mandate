@@ -17,6 +17,8 @@ pub const BID_SEED: &[u8] = b"bid";
 pub const POSITION_SET_SEED: &[u8] = b"position_set";
 #[constant]
 pub const ATTESTATION_SEED: &[u8] = b"attestation";
+#[constant]
+pub const EPOCH_RESULT_SEED: &[u8] = b"epoch_result";
 
 /// USDC has 6 decimals. The protocol refuses any other reward mint.
 pub const USDC_DECIMALS: u8 = 6;
@@ -29,6 +31,7 @@ pub const MANDATE_VERSION: u8 = 1;
 pub const BID_VERSION: u8 = 1;
 pub const POSITION_SET_VERSION: u8 = 1;
 pub const ATTESTATION_VERSION: u8 = 1;
+pub const EPOCH_RESULT_VERSION: u8 = 1;
 
 /// Measurement algorithm versions this build accepts attestations for (docs/methodology/measurement-v1.md).
 /// A mandate binds `CURRENT_ALGORITHM_VERSION` at creation; supporting a new version is a deliberate program

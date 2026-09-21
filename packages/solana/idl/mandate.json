@@ -469,6 +469,119 @@
       "args": []
     },
     {
+      "name": "claim_provider_reward",
+      "docs": [
+        "Provider: claim part of the reward earned and not yet claimed, to the provider's own USDC account."
+      ],
+      "discriminator": [
+        129,
+        34,
+        157,
+        23,
+        68,
+        79,
+        118,
+        119
+      ],
+      "accounts": [
+        {
+          "name": "provider",
+          "signer": true,
+          "relations": [
+            "mandate"
+          ]
+        },
+        {
+          "name": "protocol",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mandate",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate.sponsor",
+                "account": "Mandate"
+              },
+              {
+                "kind": "account",
+                "path": "mandate.mandate_id",
+                "account": "Mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "provider_usdc",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "amount_raw",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "close_bid",
       "docs": [
         "Provider: reclaim the rent of a cancelled or unselected bid."
@@ -557,6 +670,114 @@
           "relations": [
             "bid"
           ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "close_mandate",
+      "docs": [
+        "Anyone: close the emptied vault of a fully settled mandate; rent returns to the sponsor."
+      ],
+      "discriminator": [
+        117,
+        87,
+        189,
+        5,
+        254,
+        125,
+        248,
+        180
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "docs": [
+            "Anyone may close a finished mandate; the freed rent always goes to the sponsor who paid it."
+          ],
+          "signer": true
+        },
+        {
+          "name": "protocol",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mandate",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate.sponsor",
+                "account": "Mandate"
+              },
+              {
+                "kind": "account",
+                "path": "mandate.mandate_id",
+                "account": "Mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rent_receiver",
+          "writable": true
         }
       ],
       "args": []
@@ -847,6 +1068,219 @@
         {
           "name": "threshold",
           "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "finalize_epoch",
+      "docs": [
+        "Anyone: finalize an epoch from a threshold of matching attestations supplied as remaining accounts."
+      ],
+      "discriminator": [
+        159,
+        93,
+        117,
+        217,
+        63,
+        44,
+        249,
+        76
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "Anyone. Pays the result account's rent; gains no authority over the verdict."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mandate",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate.sponsor",
+                "account": "Mandate"
+              },
+              {
+                "kind": "account",
+                "path": "mandate.mandate_id",
+                "account": "Mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "observer_set",
+          "docs": [
+            "The exact set this mandate bound at creation; no other version can stand in."
+          ]
+        },
+        {
+          "name": "position_set"
+        },
+        {
+          "name": "epoch_result",
+          "docs": [
+            "One per (mandate, epoch). `init` makes a second finalization impossible."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  112,
+                  111,
+                  99,
+                  104,
+                  95,
+                  114,
+                  101,
+                  115,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate"
+              },
+              {
+                "kind": "arg",
+                "path": "epoch_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "epoch_index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "finalize_unavailable_epoch",
+      "docs": [
+        "Anyone: after the recovery deadline, finalize an epoch nobody attested as Unavailable (reward 0)."
+      ],
+      "discriminator": [
+        214,
+        243,
+        137,
+        180,
+        204,
+        100,
+        193,
+        71
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "Anyone. Gains no authority: the deadline, not the caller, decides."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mandate",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate.sponsor",
+                "account": "Mandate"
+              },
+              {
+                "kind": "account",
+                "path": "mandate.mandate_id",
+                "account": "Mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "epoch_result",
+          "docs": [
+            "`init`: if any result already exists for this epoch (of any outcome) this fails."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  112,
+                  111,
+                  99,
+                  104,
+                  95,
+                  114,
+                  101,
+                  115,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate"
+              },
+              {
+                "kind": "arg",
+                "path": "epoch_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "epoch_index",
+          "type": "u32"
         }
       ]
     },
@@ -1850,6 +2284,19 @@
       ]
     },
     {
+      "name": "EpochResult",
+      "discriminator": [
+        12,
+        138,
+        191,
+        28,
+        226,
+        63,
+        82,
+        83
+      ]
+    },
+    {
       "name": "Mandate",
       "discriminator": [
         113,
@@ -2021,6 +2468,19 @@
       ]
     },
     {
+      "name": "EpochFinalized",
+      "discriminator": [
+        109,
+        54,
+        231,
+        81,
+        101,
+        249,
+        145,
+        107
+      ]
+    },
+    {
       "name": "MandateActivated",
       "discriminator": [
         169,
@@ -2044,6 +2504,19 @@
         252,
         142,
         161
+      ]
+    },
+    {
+      "name": "MandateClosed",
+      "discriminator": [
+        217,
+        212,
+        155,
+        243,
+        4,
+        34,
+        255,
+        65
       ]
     },
     {
@@ -2135,6 +2608,19 @@
         118,
         76,
         132
+      ]
+    },
+    {
+      "name": "ProviderRewardClaimed",
+      "discriminator": [
+        135,
+        10,
+        207,
+        205,
+        36,
+        228,
+        102,
+        47
       ]
     },
     {
@@ -2417,6 +2903,56 @@
     },
     {
       "code": 6050,
+      "name": "NothingToClaim",
+      "msg": "Nothing to claim"
+    },
+    {
+      "code": 6051,
+      "name": "ClaimExceedsEarned",
+      "msg": "Claim exceeds the reward earned and not yet claimed"
+    },
+    {
+      "code": 6052,
+      "name": "MandateNotClosable",
+      "msg": "The mandate still has funds or unresolved epochs and cannot be closed"
+    },
+    {
+      "code": 6053,
+      "name": "QuorumNotReached",
+      "msg": "Fewer matching attestations than the observer threshold"
+    },
+    {
+      "code": 6054,
+      "name": "DuplicateAttestation",
+      "msg": "The same observer was supplied twice"
+    },
+    {
+      "code": 6055,
+      "name": "AttestationInvalid",
+      "msg": "An attestation does not belong to this mandate, epoch and observer set"
+    },
+    {
+      "code": 6056,
+      "name": "AttestationMismatch",
+      "msg": "Attestations disagree; nothing is averaged"
+    },
+    {
+      "code": 6057,
+      "name": "TooManyAttestations",
+      "msg": "Too many attestation accounts supplied"
+    },
+    {
+      "code": 6058,
+      "name": "EpochNotEnded",
+      "msg": "The epoch has not ended"
+    },
+    {
+      "code": 6059,
+      "name": "RecoveryNotElapsed",
+      "msg": "The recovery deadline has not passed"
+    },
+    {
+      "code": 6060,
       "name": "Unexpected",
       "msg": "Unexpected settlement error"
     }
@@ -2868,6 +3404,75 @@
       }
     },
     {
+      "name": "EpochFinalized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "epoch_index",
+            "type": "u32"
+          },
+          {
+            "name": "outcome",
+            "docs": [
+              "0 = Compliant, 1 = NonCompliant, 2 = Unavailable."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "reward_earned_raw",
+            "type": "u64"
+          },
+          {
+            "name": "reward_forfeited_raw",
+            "type": "u64"
+          },
+          {
+            "name": "failure_bits",
+            "type": "u8"
+          },
+          {
+            "name": "attestation_count",
+            "type": "u8"
+          },
+          {
+            "name": "payload_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "evidence_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "finalized_epochs",
+            "type": "u32"
+          },
+          {
+            "name": "earned_reward_raw",
+            "type": "u64"
+          },
+          {
+            "name": "finalized_by",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
       "name": "EpochMetrics",
       "docs": [
         "The five integer metrics settlement compares against the mandate's thresholds. Measured off chain by the",
@@ -2896,6 +3501,140 @@
           {
             "name": "provider_base_quote_eq_in_band_raw",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EpochOutcome",
+      "docs": [
+        "The final, immutable verdict on one epoch. Exactly one exists per (mandate, epoch): it is a PDA",
+        "`[b\"epoch_result\", mandate, epoch_index_le]` created with `init`, so a second finalization cannot happen."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Compliant"
+          },
+          {
+            "name": "NonCompliant"
+          },
+          {
+            "name": "Unavailable"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EpochResult",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "epoch_index",
+            "type": "u32"
+          },
+          {
+            "name": "outcome",
+            "type": {
+              "defined": {
+                "name": "EpochOutcome"
+              }
+            }
+          },
+          {
+            "name": "reward_earned_raw",
+            "docs": [
+              "Reward this epoch earned the provider: the epoch's exact share when `Compliant`, else 0."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "reward_forfeited_raw",
+            "docs": [
+              "Reward this epoch's share forfeited to the sponsor: 0 when `Compliant`, else the epoch's exact share."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "failure_bits",
+            "docs": [
+              "Bit set of failed thresholds (mandate_core::compliance); 0 unless `NonCompliant`."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "attestation_count",
+            "docs": [
+              "How many matching attestations backed the verdict; 0 when `Unavailable`."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "observed_slot",
+            "docs": [
+              "The attested facts, identical across every counted attestation. All zero when `Unavailable`."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "observed_unix_ts",
+            "type": "i64"
+          },
+          {
+            "name": "algorithm_version",
+            "type": "u32"
+          },
+          {
+            "name": "position_set",
+            "type": "pubkey"
+          },
+          {
+            "name": "payload_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "evidence_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "metrics",
+            "type": {
+              "defined": {
+                "name": "EpochMetrics"
+              }
+            }
+          },
+          {
+            "name": "finalized_by",
+            "type": "pubkey"
+          },
+          {
+            "name": "finalized_at",
+            "type": "i64"
           }
         ]
       }
@@ -3238,6 +3977,34 @@
             "docs": [
               "Exact USDC returned to the sponsor."
             ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MandateClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "sponsor",
+            "type": "pubkey"
+          },
+          {
+            "name": "earned_reward_raw",
+            "type": "u64"
+          },
+          {
+            "name": "claimed_reward_raw",
+            "type": "u64"
+          },
+          {
+            "name": "sponsor_withdrawn_raw",
             "type": "u64"
           }
         ]
@@ -3839,6 +4606,34 @@
       }
     },
     {
+      "name": "ProviderRewardClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "provider",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_raw",
+            "type": "u64"
+          },
+          {
+            "name": "total_claimed_raw",
+            "type": "u64"
+          },
+          {
+            "name": "vault_balance_raw",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "SponsorSurplusWithdrawn",
       "type": {
         "kind": "struct",
@@ -3961,6 +4756,11 @@
       "name": "BID_SEED",
       "type": "bytes",
       "value": "[98, 105, 100]"
+    },
+    {
+      "name": "EPOCH_RESULT_SEED",
+      "type": "bytes",
+      "value": "[101, 112, 111, 99, 104, 95, 114, 101, 115, 117, 108, 116]"
     },
     {
       "name": "MANDATE_SEED",

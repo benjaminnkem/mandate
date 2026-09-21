@@ -105,6 +105,26 @@ pub enum MandateError {
     InvalidMetrics,
     #[msg("A hash is empty")]
     InvalidHash,
+    #[msg("Nothing to claim")]
+    NothingToClaim,
+    #[msg("Claim exceeds the reward earned and not yet claimed")]
+    ClaimExceedsEarned,
+    #[msg("The mandate still has funds or unresolved epochs and cannot be closed")]
+    MandateNotClosable,
+    #[msg("Fewer matching attestations than the observer threshold")]
+    QuorumNotReached,
+    #[msg("The same observer was supplied twice")]
+    DuplicateAttestation,
+    #[msg("An attestation does not belong to this mandate, epoch and observer set")]
+    AttestationInvalid,
+    #[msg("Attestations disagree; nothing is averaged")]
+    AttestationMismatch,
+    #[msg("Too many attestation accounts supplied")]
+    TooManyAttestations,
+    #[msg("The epoch has not ended")]
+    EpochNotEnded,
+    #[msg("The recovery deadline has not passed")]
+    RecoveryNotElapsed,
     #[msg("Unexpected settlement error")]
     Unexpected,
 }
@@ -128,6 +148,8 @@ impl From<MandateCoreError> for MandateError {
             MandateCoreError::NothingToWithdraw => Self::NothingToWithdraw,
             MandateCoreError::WithdrawExceedsAvailable => Self::WithdrawExceedsAvailable,
             MandateCoreError::InvalidThreshold => Self::InvalidThreshold,
+            MandateCoreError::NothingToClaim => Self::NothingToClaim,
+            MandateCoreError::ClaimExceedsEarned => Self::ClaimExceedsEarned,
             _ => Self::Unexpected,
         }
     }

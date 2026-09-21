@@ -100,4 +100,15 @@ impl Mandate {
             sponsor_withdrawn_raw: self.sponsor_withdrawn_raw,
         }
     }
+
+    /// Store the counters of an accounting state produced by `mandate_core`. Only the counters that
+    /// finalization moves are written; the fixed economic terms are untouched.
+    pub fn store_accounting(&mut self, state: &AccountingState) {
+        self.finalized_epochs = state.finalized_epochs;
+        self.compliant_epochs = state.compliant_epochs;
+        self.noncompliant_epochs = state.noncompliant_epochs;
+        self.unavailable_epochs = state.unavailable_epochs;
+        self.earned_reward_raw = state.earned_reward_raw;
+        self.forfeited_reward_raw = state.forfeited_reward_raw;
+    }
 }

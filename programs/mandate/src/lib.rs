@@ -142,6 +142,35 @@ pub mod mandate {
         instructions::refund_unactivated_mandate::handle_refund_unactivated_mandate(ctx)
     }
 
+    /// Anyone: finalize an epoch from a threshold of matching attestations supplied as remaining accounts.
+    pub fn finalize_epoch<'info>(
+        ctx: Context<'info, FinalizeEpoch<'info>>,
+        epoch_index: u32,
+    ) -> Result<()> {
+        instructions::finalize_epoch::handle_finalize_epoch(ctx, epoch_index)
+    }
+
+    /// Anyone: after the recovery deadline, finalize an epoch nobody attested as Unavailable (reward 0).
+    pub fn finalize_unavailable_epoch(
+        ctx: Context<FinalizeUnavailableEpoch>,
+        epoch_index: u32,
+    ) -> Result<()> {
+        instructions::finalize_unavailable_epoch::handle_finalize_unavailable_epoch(
+            ctx,
+            epoch_index,
+        )
+    }
+
+    /// Provider: claim part of the reward earned and not yet claimed, to the provider's own USDC account.
+    pub fn claim_provider_reward(ctx: Context<ClaimProviderReward>, amount_raw: u64) -> Result<()> {
+        instructions::claim_provider_reward::handle_claim_provider_reward(ctx, amount_raw)
+    }
+
+    /// Anyone: close the emptied vault of a fully settled mandate; rent returns to the sponsor.
+    pub fn close_mandate(ctx: Context<CloseMandate>) -> Result<()> {
+        instructions::close_mandate::handle_close_mandate(ctx)
+    }
+
     /// Observer: attest the measured metrics of one epoch. Accrues nothing; settlement needs a quorum.
     pub fn submit_attestation(
         ctx: Context<SubmitAttestation>,

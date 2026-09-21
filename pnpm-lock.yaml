@@ -379,6 +379,9 @@ importers:
       '@anchor-lang/core':
         specifier: 1.2.0
         version: 1.2.0(bufferutil@4.1.0)(typescript@6.0.3)
+      '@mandate/domain':
+        specifier: workspace:*
+        version: link:../domain
       '@solana/web3.js':
         specifier: 1.99.0
         version: 1.99.0(bufferutil@4.1.0)(typescript@6.0.3)(utf-8-validate@6.0.6)
@@ -442,6 +445,9 @@ importers:
       '@mandate/prestocks':
         specifier: workspace:*
         version: link:../packages/prestocks
+      '@mandate/solana':
+        specifier: workspace:*
+        version: link:../packages/solana
       '@solana/web3.js':
         specifier: 1.99.0
         version: 1.99.0(bufferutil@4.1.0)(typescript@6.0.3)(utf-8-validate@6.0.6)

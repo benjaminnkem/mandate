@@ -11,6 +11,7 @@ import {
   findPositionSetPda,
   findProgramDataPda,
   findProtocolPda,
+  findEpochResultPda,
   findVaultPda,
 } from "./pda.ts";
 
@@ -408,6 +409,106 @@ export function submitAttestation(
       observer_set: p.observerSet,
       position_set: p.positionSet,
       attestation: findAttestationPda(p.mandate, p.terms.epochIndex, p.observer, pid(p)),
+    },
+    pid(p),
+  );
+}
+
+/**
+ * Finalize an epoch from a threshold of attestations, passed as read-only remaining accounts in the given
+ * order. Anyone may call it. Every attestation must belong to this mandate, epoch and observer set and all
+ * must agree exactly; choose the matching ones yourself, since disagreement is rejected rather than averaged.
+ */
+export function finalizeEpoch(
+  p: Common & {
+    payer: PublicKey;
+    mandate: PublicKey;
+    observerSet: PublicKey;
+    positionSet: PublicKey;
+    epochIndex: number;
+    attestations: readonly PublicKey[];
+  },
+): TransactionInstruction {
+  const ix = buildInstruction(
+    "finalize_epoch",
+    { epochIndex: p.epochIndex },
+    {
+      payer: p.payer,
+      mandate: p.mandate,
+      observer_set: p.observerSet,
+      position_set: p.positionSet,
+      epoch_result: findEpochResultPda(p.mandate, p.epochIndex, pid(p)),
+    },
+    pid(p),
+  );
+  for (const pubkey of p.attestations) ix.keys.push({ pubkey, isSigner: false, isWritable: false });
+  return ix;
+}
+
+/** Resolve an unattested epoch as Unavailable. Only valid once the mandate's recovery deadline has passed. */
+export function finalizeUnavailableEpoch(
+  p: Common & { payer: PublicKey; mandate: PublicKey; epochIndex: number },
+): TransactionInstruction {
+  return buildInstruction(
+    "finalize_unavailable_epoch",
+    { epochIndex: p.epochIndex },
+    {
+      payer: p.payer,
+      mandate: p.mandate,
+      epoch_result: findEpochResultPda(p.mandate, p.epochIndex, pid(p)),
+    },
+    pid(p),
+  );
+}
+
+/** Provider: claim part of the reward earned and not yet claimed, to a USDC account the provider owns. */
+export function claimProviderReward(
+  p: Common & {
+    provider: PublicKey;
+    providerUsdc: PublicKey;
+    mandate: PublicKey;
+    usdcMint: PublicKey;
+    amountRaw: bigint;
+    tokenProgram?: PublicKey;
+  },
+): TransactionInstruction {
+  return buildInstruction(
+    "claim_provider_reward",
+    { amountRaw: p.amountRaw },
+    {
+      provider: p.provider,
+      protocol: findProtocolPda(pid(p)),
+      mandate: p.mandate,
+      usdc_mint: p.usdcMint,
+      token_program: p.tokenProgram ?? TOKEN_PROGRAM_ID,
+      vault: findVaultPda(p.mandate, pid(p)),
+      provider_usdc: p.providerUsdc,
+    },
+    pid(p),
+  );
+}
+
+/** Close the emptied vault of a fully settled mandate. Anyone may call; the rent goes to the sponsor. */
+export function closeMandate(
+  p: Common & {
+    caller: PublicKey;
+    mandate: PublicKey;
+    sponsor: PublicKey;
+    usdcMint: PublicKey;
+    tokenProgram?: PublicKey;
+  },
+): TransactionInstruction {
+  return buildInstruction(
+    "close_mandate",
+    {},
+    {
+      caller: p.caller,
+      protocol: findProtocolPda(pid(p)),
+      mandate: p.mandate,
+      usdc_mint: p.usdcMint,
+      token_program: p.tokenProgram ?? TOKEN_PROGRAM_ID,
+      vault: findVaultPda(p.mandate, pid(p)),
+      rent_receiver: p.sponsor,
     },
     pid(p),
   );

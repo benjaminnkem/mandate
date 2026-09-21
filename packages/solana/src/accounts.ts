@@ -41,7 +41,8 @@ export type AccountName =
   | "Mandate"
   | "Bid"
   | "PositionSet"
-  | "EpochAttestation";
+  | "EpochAttestation"
+  | "EpochResult";
 
 /** Decode a program account by name. The caller states the shape it expects; nothing is guessed. */
 // The generic is the caller's stated expectation of the decoded shape; the coder returns untyped data.
@@ -79,7 +80,16 @@ export interface MandateAccount {
   readonly minProviderBaseQuoteEqInBandRaw: bigint;
   readonly provider: PublicKey;
   readonly positionSet: PublicKey;
+  readonly maxRewardRaw: bigint;
+  readonly acceptedRewardRaw: bigint;
   readonly finalizedEpochs: number;
+  readonly compliantEpochs: number;
+  readonly noncompliantEpochs: number;
+  readonly unavailableEpochs: number;
+  readonly earnedRewardRaw: bigint;
+  readonly forfeitedRewardRaw: bigint;
+  readonly claimedRewardRaw: bigint;
+  readonly sponsorWithdrawnRaw: bigint;
   readonly status:
     "Bidding" | "Awarded" | "Active" | "AwaitingFinalization" | "Closed" | "Cancelled";
 }
@@ -119,6 +129,28 @@ export interface EpochAttestationAccount {
   readonly evidenceHash: readonly number[] | Uint8Array;
   readonly metrics: MetricsAccount;
   readonly createdAt: bigint;
+}
+
+export type EpochOutcomeName = "Compliant" | "NonCompliant" | "Unavailable";
+
+export interface EpochResultAccount {
+  readonly mandate: PublicKey;
+  readonly epochIndex: number;
+  readonly outcome: EpochOutcomeName;
+  readonly rewardEarnedRaw: bigint;
+  readonly rewardForfeitedRaw: bigint;
+  /** Bit set of failed thresholds: 1 spread, 2 buy depth, 4 sell depth, 8 provider quote, 16 provider base. */
+  readonly failureBits: number;
+  readonly attestationCount: number;
+  readonly observedSlot: bigint;
+  readonly observedUnixTs: bigint;
+  readonly algorithmVersion: number;
+  readonly positionSet: PublicKey;
+  readonly payloadHash: readonly number[] | Uint8Array;
+  readonly evidenceHash: readonly number[] | Uint8Array;
+  readonly metrics: MetricsAccount;
+  readonly finalizedBy: PublicKey;
+  readonly finalizedAt: bigint;
 }
 
 /** Positions actually registered (the account stores a fixed-size array padded with default keys). */
