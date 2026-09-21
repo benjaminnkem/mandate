@@ -9,6 +9,7 @@ import {
 import type { BoundaryProof } from "../algorithm/search.ts";
 import { BIN_ARRAYS_PER_DIRECTION } from "../adapter/dlmm-engine.ts";
 import type { PoolObservation } from "../adapter/pool.ts";
+import type { AccountSnapshot } from "../adapter/snapshot.ts";
 import { accountHashes } from "../adapter/snapshot.ts";
 import { METEORA_DLMM_SDK_VERSION } from "../sdk.ts";
 import { canonicalHash, type CanonicalValue } from "./canonical.ts";
@@ -57,9 +58,13 @@ export interface EvidenceBundle {
   /** The deterministic document every honest observer must reproduce exactly. */
   readonly payload: CanonicalValue;
   readonly payloadHash: string;
-  /** Payload plus observer-specific transport metadata. */
+  /** SHA-256 of the exact account snapshot the payload was computed from. */
+  readonly snapshotSha256: string;
+  /** `{payload_hash, snapshot_sha256}`: identical for every observer that measured the same snapshot. */
   readonly evidence: CanonicalValue;
   readonly evidenceHash: string;
+  /** Observer-specific facts (instance id, RPC host, capture time). Stored beside the evidence, never hashed into it. */
+  readonly transport: CanonicalValue;
   /** The five settlement metrics, ready for an attestation. */
   readonly metrics: {
     readonly effectiveSpreadBps: number;
@@ -190,29 +195,68 @@ export function buildEvidence(
       accountCount: call.addresses.length,
     })),
   };
+  const transportRecord: CanonicalValue = {
+    observer_instance_id: fullTransport.observerInstanceId,
+    rpc_host: fullTransport.rpcHost,
+    snapshot_label: fullTransport.snapshotLabel,
+    snapshot_captured_at: fullTransport.snapshotCapturedAt,
+    calls: fullTransport.calls.map((c) => ({
+      method: c.method,
+      context_slot: c.contextSlot,
+      account_count: c.accountCount,
+    })),
+  };
+
+  // The evidence hash commits to the deterministic result AND the exact snapshot it was computed from, and to
+  // nothing observer-specific. Two honest observers that measured the same snapshot therefore produce the
+  // same evidence hash, which is what onchain quorum matching requires.
+  const payloadHash = canonicalHash(payload);
+  const snapshotSha256 = canonicalHash(snapshotToCanonical(observation.snapshot));
   const evidence: CanonicalValue = {
     schema_version: EVIDENCE_SCHEMA_VERSION,
-    payload,
-    transport: {
-      observer_instance_id: fullTransport.observerInstanceId,
-      rpc_host: fullTransport.rpcHost,
-      snapshot_label: fullTransport.snapshotLabel,
-      snapshot_captured_at: fullTransport.snapshotCapturedAt,
-      calls: fullTransport.calls.map((c) => ({
-        method: c.method,
-        context_slot: c.contextSlot,
-        account_count: c.accountCount,
-      })),
-    },
+    payload_hash: payloadHash,
+    snapshot_sha256: snapshotSha256,
   };
 
   return {
     payload,
-    payloadHash: canonicalHash(payload),
+    payloadHash,
+    snapshotSha256,
     evidence,
     evidenceHash: canonicalHash(evidence),
+    transport: transportRecord,
     metrics: m.metrics,
     observedSlot: BigInt(observation.slots.maxSlot),
     observedUnixTs: BigInt(observation.clock.unixTimestamp),
+  };
+}
+
+/** The snapshot as canonical data, so it can be hashed identically by anyone who holds it. */
+export function snapshotToCanonical(snapshot: AccountSnapshot): CanonicalValue {
+  return {
+    schema: snapshot.schema,
+    version: snapshot.version,
+    cluster: snapshot.cluster,
+    label: snapshot.label,
+    captured_at: snapshot.capturedAt,
+    calls: snapshot.calls.map((c) => ({
+      method: c.method,
+      context_slot: c.contextSlot,
+      addresses: [...c.addresses],
+    })),
+    accounts: Object.fromEntries(
+      Object.entries(snapshot.accounts).map(([address, account]) => [
+        address,
+        account === null
+          ? null
+          : {
+              owner: account.owner,
+              lamports: account.lamports,
+              executable: account.executable,
+              rent_epoch: account.rentEpoch,
+              data_base64: account.dataBase64,
+            },
+      ]),
+    ),
   };
 }

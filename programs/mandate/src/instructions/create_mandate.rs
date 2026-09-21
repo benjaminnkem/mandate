@@ -4,8 +4,8 @@ use mandate_core::timing::{acceptance_cutoff, build_schedule, position_lock_at, 
 use mandate_core::validation::{validate_create_mandate, CreateMandateParams, ProtocolLimits};
 
 use crate::constants::{
-    MANDATE_SEED, MANDATE_VERSION, MARKET_SEED, OBSERVER_SET_SEED, PROTOCOL_SEED, USDC_DECIMALS,
-    VAULT_SEED,
+    CURRENT_ALGORITHM_VERSION, MANDATE_SEED, MANDATE_VERSION, MARKET_SEED, OBSERVER_SET_SEED,
+    PROTOCOL_SEED, USDC_DECIMALS, VAULT_SEED,
 };
 use crate::error::MandateError;
 use crate::events::MandateCreated;
@@ -173,6 +173,8 @@ pub fn handle_create_mandate(ctx: Context<CreateMandate>, args: CreateMandateArg
     mandate.position_lock_at =
         position_lock_at(schedule.start_at, protocol.position_lock_buffer_seconds)
             .map_err(MandateError::from)?;
+    mandate.algorithm_version = CURRENT_ALGORITHM_VERSION;
+    mandate.unavailable_recovery_seconds = protocol.unavailable_recovery_seconds;
     mandate.max_reward_raw = args.max_reward_raw;
     mandate.accepted_reward_raw = 0;
     mandate.base_epoch_reward_raw = 0;

@@ -335,6 +335,45 @@ fn build() -> Value {
             .to_account_metas(None),
             mandate::instruction::RefundUnactivatedMandate {}.data(),
         ),
+        case(
+            "submit_attestation",
+            mandate::accounts::SubmitAttestation {
+                observer: key(30),
+                mandate: m1,
+                observer_set: observer_set(1),
+                position_set: position_set(&m1),
+                attestation: Pubkey::find_program_address(
+                    &[
+                        mandate::ATTESTATION_SEED,
+                        m1.as_ref(),
+                        &7u32.to_le_bytes(),
+                        key(30).as_ref(),
+                    ],
+                    &program,
+                )
+                .0,
+                system_program: system,
+            }
+            .to_account_metas(None),
+            mandate::instruction::SubmitAttestation {
+                args: mandate::SubmitAttestationArgs {
+                    epoch_index: 7,
+                    observed_slot: 448_786_149,
+                    observed_unix_ts: 1_789_921_836,
+                    algorithm_version: 1,
+                    payload_hash: [0xAA; 32],
+                    evidence_hash: [0xBB; 32],
+                    metrics: mandate::EpochMetrics {
+                        effective_spread_bps: 251,
+                        pool_buy_depth_quote_raw: 63_491_020_966,
+                        pool_sell_depth_quote_raw: 49_065_543_907,
+                        provider_quote_in_band_raw: 91_107_867,
+                        provider_base_quote_eq_in_band_raw: 81_314_309,
+                    },
+                },
+            }
+            .data(),
+        ),
     ];
 
     json!({
@@ -354,6 +393,7 @@ fn build() -> Value {
             "vault42": vault(&m1).to_string(),
             "bid42x14n3": bid(&provider, 3).to_string(),
             "positionSet42": position_set(&m1).to_string(),
+            "attestation42e7o30": Pubkey::find_program_address(&[mandate::ATTESTATION_SEED, m1.as_ref(), &7u32.to_le_bytes(), key(30).as_ref()], &program).0.to_string(),
             "programData": program_data.to_string(),
         },
         "instructions": instructions,

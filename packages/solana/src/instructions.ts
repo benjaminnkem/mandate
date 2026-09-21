@@ -3,6 +3,7 @@ import type { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { buildInstruction } from "./build.ts";
 import { MANDATE_PROGRAM_ID, TOKEN_PROGRAM_ID } from "./idl.ts";
 import {
+  findAttestationPda,
   findBidPda,
   findMandatePda,
   findMarketPda,
@@ -356,6 +357,57 @@ export function refundUnactivatedMandate(
       token_program: p.tokenProgram ?? TOKEN_PROGRAM_ID,
       vault: findVaultPda(p.mandate, pid(p)),
       sponsor_usdc: p.sponsorUsdc,
+    },
+    pid(p),
+  );
+}
+
+/** The five integer metrics an attestation carries. */
+export interface AttestedMetrics {
+  readonly effectiveSpreadBps: number;
+  readonly poolBuyDepthQuoteRaw: bigint;
+  readonly poolSellDepthQuoteRaw: bigint;
+  readonly providerQuoteInBandRaw: bigint;
+  readonly providerBaseQuoteEqInBandRaw: bigint;
+}
+
+export interface AttestationTerms {
+  readonly epochIndex: number;
+  readonly observedSlot: bigint;
+  readonly observedUnixTs: bigint;
+  readonly algorithmVersion: number;
+  /** 32 bytes. */
+  readonly payloadHash: Uint8Array;
+  /** 32 bytes. */
+  readonly evidenceHash: Uint8Array;
+  readonly metrics: AttestedMetrics;
+}
+
+/**
+ * An observer's attestation for one epoch. `observerSet` and `positionSet` are the addresses stored on the
+ * mandate (`observer_set`, `position_set`); the program rejects any other account in their place.
+ */
+export function submitAttestation(
+  p: Common & {
+    observer: PublicKey;
+    mandate: PublicKey;
+    observerSet: PublicKey;
+    positionSet: PublicKey;
+    terms: AttestationTerms;
+  },
+): TransactionInstruction {
+  if (p.terms.payloadHash.length !== 32 || p.terms.evidenceHash.length !== 32) {
+    throw new RangeError("hashes must be 32 bytes");
+  }
+  return buildInstruction(
+    "submit_attestation",
+    { args: { ...p.terms, metrics: { ...p.terms.metrics } } },
+    {
+      observer: p.observer,
+      mandate: p.mandate,
+      observer_set: p.observerSet,
+      position_set: p.positionSet,
+      attestation: findAttestationPda(p.mandate, p.terms.epochIndex, p.observer, pid(p)),
     },
     pid(p),
   );

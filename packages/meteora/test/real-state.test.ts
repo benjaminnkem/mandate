@@ -220,7 +220,7 @@ describe("real mainnet snapshot: golden measurement (algorithm v1)", () => {
     expect(b3.metrics.poolBuyDepthQuoteRaw).toBe(63_491_020_966n); // pool metrics do not depend on the provider
   });
 
-  it("keeps observer-specific transport metadata out of the payload hash", async () => {
+  it("keeps observer-specific transport metadata out of both the payload and evidence hashes", async () => {
     const obs = await replayPool(snapshot, params);
     const a = buildEvidence(obs, context, provenance, inputs, {
       observerInstanceId: "observer-1",
@@ -231,7 +231,10 @@ describe("real mainnet snapshot: golden measurement (algorithm v1)", () => {
       rpcHost: "rpc-b.example",
     });
     expect(a.payloadHash).toBe(b.payloadHash);
-    expect(a.evidenceHash).not.toBe(b.evidenceHash);
+    // The evidence hash covers payload + snapshot only, so it is ALSO identical: this is what lets two
+    // observers match onchain.
+    expect(a.evidenceHash).toBe(b.evidenceHash);
+    expect(canonicalJson(a.transport)).not.toBe(canonicalJson(b.transport));
   });
 });
 

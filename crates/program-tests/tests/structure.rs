@@ -47,6 +47,7 @@ fn the_instruction_set_is_exactly_the_reviewed_one() {
         "register_positions",
         "activate_mandate",
         "refund_unactivated_mandate",
+        "submit_attestation",
     ]
     .iter()
     .map(|s| s.to_string())
@@ -176,6 +177,7 @@ fn account_types_are_the_reviewed_ones() {
         "Mandate",
         "Bid",
         "PositionSet",
+        "EpochAttestation",
     ]
     .iter()
     .map(|s| s.to_string())

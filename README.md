@@ -57,7 +57,7 @@ as provider failure.
 
 ## Repository status
 
-Prompts 1 to 7 of [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md) are complete: the monorepo is scaffolded, the
+Prompts 1 to 8 of [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md) are complete: the monorepo is scaffolded, the
 domain and settlement math exist in TypeScript and Rust with shared golden vectors, and a deterministic measurement
 engine reproduces real PreStocks/USDC Meteora DLMM measurements byte for byte from a recorded mainnet snapshot (see
 [`docs/research/current-market.md`](docs/research/current-market.md) and
@@ -65,7 +65,7 @@ engine reproduces real PreStocks/USDC Meteora DLMM measurements byte for byte fr
 foundation (configuration, two-step admin transfer, new-risk pause, immutable observer sets, approved-market registry)
 sponsor mandates with atomic USDC escrow in a program-owned vault, open provider bidding, sponsor award with the exact
 per-epoch reward split, surplus withdrawal, the provider's locked position set and permissionless activation. Epoch
-attestation and settlement do not exist yet, and no market is approved.
+attestation (`submit_attestation`, stored per observer per epoch, accruing nothing) exists, driven by the leader/replay observer (ADR 0015). Quorum finalization and settlement do not exist yet, and no market is approved.
 
 | Area | State |
 | --- | --- |
@@ -74,10 +74,11 @@ attestation and settlement do not exist yet, and no market is approved.
 | `packages/meteora` | canonical measurement engine v1, atomic snapshot record/replay, canonical evidence (Prompt 3) |
 | `packages/domain`, `crates/mandate-core` | integer money math, epoch/reward/compliance/accounting, validation (Prompt 2) |
 | `packages/solana` | IDL-driven TypeScript client, verified byte-for-byte against the Rust program (Prompt 5) |
+| `apps/observer` | leader/replay observer CLI: one key, deterministic epoch job, durable evidence, idempotent attestation (Prompt 8) |
 | `packages/db`, `packages/testkit` | empty shells |
-| `programs/mandate` | 18 instructions: protocol config, admin transfer, pause, observer sets, market registry, mandate + escrow, bidding, award, surplus withdrawal, position set, activation, unactivated refund (Prompts 4-7) |
+| `programs/mandate` | 19 instructions: protocol config, admin transfer, pause, observer sets, market registry, mandate + escrow, bidding, award, surplus withdrawal, position set, activation, unactivated refund, epoch attestation (Prompts 4-8) |
 | `crates/mandate-core` | pure settlement + protocol validation + fail-closed `LbPair` reader |
-| `crates/program-tests` | 150 LiteSVM tests executing the compiled SBF binary, plus Rust-generated client vectors |
+| `crates/program-tests` | 168 LiteSVM tests executing the compiled SBF binary, plus Rust-generated client vectors |
 | Architecture decisions | [`docs/adr/`](docs/adr/) |
 
 ## Toolchain

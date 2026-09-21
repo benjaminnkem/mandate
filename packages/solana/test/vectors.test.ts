@@ -13,7 +13,9 @@ import {
   registerPositions,
   cancelBid,
   closeBid,
+  findAttestationPda,
   findBidPda,
+  submitAttestation,
   submitBid,
   withdrawSurplusAfterAward,
   buildInstruction,
@@ -227,6 +229,38 @@ describe("the TypeScript client agrees with the Rust program", () => {
     );
   });
 
+  it("encodes submit_attestation and derives its PDA identically", () => {
+    const observer = filled(30);
+    const mandate = findMandatePda(sponsor, 42n);
+    expect(findAttestationPda(mandate, 7, observer).toBase58()).toBe(
+      vectors.pdas["attestation42e7o30"],
+    );
+    expectMatch(
+      "submit_attestation",
+      submitAttestation({
+        observer,
+        mandate,
+        observerSet: findObserverSetPda(1),
+        positionSet: findPositionSetPda(mandate),
+        terms: {
+          epochIndex: 7,
+          observedSlot: 448_786_149n,
+          observedUnixTs: 1_789_921_836n,
+          algorithmVersion: 1,
+          payloadHash: new Uint8Array(32).fill(0xaa),
+          evidenceHash: new Uint8Array(32).fill(0xbb),
+          metrics: {
+            effectiveSpreadBps: 251,
+            poolBuyDepthQuoteRaw: 63_491_020_966n,
+            poolSellDepthQuoteRaw: 49_065_543_907n,
+            providerQuoteInBandRaw: 91_107_867n,
+            providerBaseQuoteEqInBandRaw: 81_314_309n,
+          },
+        },
+      }),
+    );
+  });
+
   it("covers every instruction the Rust side produced a vector for", () => {
     expect(vectors.instructions.map((i) => i.instruction).sort()).toEqual(
       [
@@ -248,6 +282,7 @@ describe("the TypeScript client agrees with the Rust program", () => {
         "register_positions",
         "activate_mandate",
         "refund_unactivated_mandate",
+        "submit_attestation",
       ].sort(),
     );
   });

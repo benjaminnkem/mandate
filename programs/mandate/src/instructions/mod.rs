@@ -9,6 +9,7 @@ pub mod initialize_protocol;
 pub mod market;
 pub mod refund_unactivated_mandate;
 pub mod register_positions;
+pub mod submit_attestation;
 pub mod submit_bid;
 pub mod withdraw_surplus_after_award;
 
@@ -23,5 +24,6 @@ pub use initialize_protocol::*;
 pub use market::*;
 pub use refund_unactivated_mandate::*;
 pub use register_positions::*;
+pub use submit_attestation::*;
 pub use submit_bid::*;
 pub use withdraw_surplus_after_award::*;

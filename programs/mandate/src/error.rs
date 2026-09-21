@@ -83,6 +83,28 @@ pub enum MandateError {
     PositionSetExists,
     #[msg("No positions were registered")]
     PositionSetMissing,
+    #[msg("Signer is not in the mandate's observer set")]
+    ObserverNotInSet,
+    #[msg("Observer set is not the one this mandate bound")]
+    ObserverSetMismatch,
+    #[msg("Position set is not the one this mandate activated with")]
+    PositionSetMismatch,
+    #[msg("The mandate is not active")]
+    MandateNotActive,
+    #[msg("Epoch index is out of range")]
+    EpochOutOfRange,
+    #[msg("The observation time is outside the epoch")]
+    ObservationOutsideEpoch,
+    #[msg("The observation is in the future")]
+    ObservationInFuture,
+    #[msg("Attestations for this epoch are closed")]
+    AttestationWindowClosed,
+    #[msg("Unsupported measurement algorithm version")]
+    UnsupportedAlgorithm,
+    #[msg("Attested metrics are outside their possible range")]
+    InvalidMetrics,
+    #[msg("A hash is empty")]
+    InvalidHash,
     #[msg("Unexpected settlement error")]
     Unexpected,
 }
@@ -100,6 +122,7 @@ impl From<MandateCoreError> for MandateError {
             MandateCoreError::TooManyEpochs => Self::TooManyEpochs,
             MandateCoreError::InvalidBudget => Self::InvalidBudget,
             MandateCoreError::BidExpired => Self::BidExpired,
+            MandateCoreError::EpochOutOfRange => Self::EpochOutOfRange,
             MandateCoreError::InvalidPositionSet => Self::InvalidPositionSet,
             MandateCoreError::DuplicatePosition => Self::DuplicatePosition,
             MandateCoreError::NothingToWithdraw => Self::NothingToWithdraw,

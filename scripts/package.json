@@ -12,7 +12,8 @@
     "market:discover": "node src/discover-meteora-market.ts",
     "market:measure": "node src/measure-pool.ts",
     "market:positions": "node src/list-positions.ts",
-    "positions:inspect": "node src/inspect-positions.ts"
+    "positions:inspect": "node src/inspect-positions.ts",
+    "observers:provision": "node src/provision-observer-keys.ts"
   },
   "dependencies": {
     "@mandate/config": "workspace:*",

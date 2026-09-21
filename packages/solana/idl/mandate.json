@@ -1367,6 +1367,126 @@
       ]
     },
     {
+      "name": "submit_attestation",
+      "docs": [
+        "Observer: attest the measured metrics of one epoch. Accrues nothing; settlement needs a quorum."
+      ],
+      "discriminator": [
+        238,
+        220,
+        255,
+        105,
+        183,
+        211,
+        40,
+        83
+      ],
+      "accounts": [
+        {
+          "name": "observer",
+          "docs": [
+            "An observer key from the mandate's snapshotted set. Signs, and pays the attestation's rent."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mandate",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  100,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate.sponsor",
+                "account": "Mandate"
+              },
+              {
+                "kind": "account",
+                "path": "mandate.mandate_id",
+                "account": "Mandate"
+              }
+            ]
+          }
+        },
+        {
+          "name": "observer_set",
+          "docs": [
+            "The exact observer set this mandate bound at creation. No other version can stand in."
+          ]
+        },
+        {
+          "name": "position_set",
+          "docs": [
+            "The exact position set this mandate activated with. The observation is bound to it."
+          ]
+        },
+        {
+          "name": "attestation",
+          "docs": [
+            "One per observer per epoch: a second submission derives the same address and fails."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mandate"
+              },
+              {
+                "kind": "arg",
+                "path": "args.epoch_index"
+              },
+              {
+                "kind": "account",
+                "path": "observer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "SubmitAttestationArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "submit_bid",
       "docs": [
         "Provider: place an open bid on a mandate. Nothing but rent is taken."
@@ -1717,6 +1837,19 @@
       ]
     },
     {
+      "name": "EpochAttestation",
+      "discriminator": [
+        70,
+        18,
+        200,
+        135,
+        170,
+        204,
+        152,
+        93
+      ]
+    },
+    {
       "name": "Mandate",
       "discriminator": [
         113,
@@ -1872,6 +2005,19 @@
         70,
         56,
         22
+      ]
+    },
+    {
+      "name": "EpochAttested",
+      "discriminator": [
+        152,
+        73,
+        218,
+        104,
+        70,
+        32,
+        96,
+        222
       ]
     },
     {
@@ -2216,6 +2362,61 @@
     },
     {
       "code": 6039,
+      "name": "ObserverNotInSet",
+      "msg": "Signer is not in the mandate's observer set"
+    },
+    {
+      "code": 6040,
+      "name": "ObserverSetMismatch",
+      "msg": "Observer set is not the one this mandate bound"
+    },
+    {
+      "code": 6041,
+      "name": "PositionSetMismatch",
+      "msg": "Position set is not the one this mandate activated with"
+    },
+    {
+      "code": 6042,
+      "name": "MandateNotActive",
+      "msg": "The mandate is not active"
+    },
+    {
+      "code": 6043,
+      "name": "EpochOutOfRange",
+      "msg": "Epoch index is out of range"
+    },
+    {
+      "code": 6044,
+      "name": "ObservationOutsideEpoch",
+      "msg": "The observation time is outside the epoch"
+    },
+    {
+      "code": 6045,
+      "name": "ObservationInFuture",
+      "msg": "The observation is in the future"
+    },
+    {
+      "code": 6046,
+      "name": "AttestationWindowClosed",
+      "msg": "Attestations for this epoch are closed"
+    },
+    {
+      "code": 6047,
+      "name": "UnsupportedAlgorithm",
+      "msg": "Unsupported measurement algorithm version"
+    },
+    {
+      "code": 6048,
+      "name": "InvalidMetrics",
+      "msg": "Attested metrics are outside their possible range"
+    },
+    {
+      "code": 6049,
+      "name": "InvalidHash",
+      "msg": "A hash is empty"
+    },
+    {
+      "code": 6050,
       "name": "Unexpected",
       "msg": "Unexpected settlement error"
     }
@@ -2523,6 +2724,183 @@
       }
     },
     {
+      "name": "EpochAttestation",
+      "docs": [
+        "One observer's signed claim about one epoch. PDA `[b\"attestation\", mandate, epoch_index_le, observer]`,",
+        "so there is at most one per observer per epoch and it can never be replayed to another mandate or epoch.",
+        "",
+        "It records facts only (\"at slot S, these metrics, this evidence\"). It accrues no reward and decides",
+        "nothing: settlement needs a quorum of matching attestations (Prompt 9)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "epoch_index",
+            "type": "u32"
+          },
+          {
+            "name": "observer",
+            "type": "pubkey"
+          },
+          {
+            "name": "observed_slot",
+            "type": "u64"
+          },
+          {
+            "name": "observed_unix_ts",
+            "type": "i64"
+          },
+          {
+            "name": "algorithm_version",
+            "type": "u32"
+          },
+          {
+            "name": "position_set",
+            "docs": [
+              "The position set the observation was bound to."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "payload_hash",
+            "docs": [
+              "SHA-256 of the canonical payload every honest observer must reproduce exactly."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "evidence_hash",
+            "docs": [
+              "SHA-256 of `{payload_hash, snapshot_sha256}`: also identical across honest observers."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "metrics",
+            "type": {
+              "defined": {
+                "name": "EpochMetrics"
+              }
+            }
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EpochAttested",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "attestation",
+            "type": "pubkey"
+          },
+          {
+            "name": "mandate",
+            "type": "pubkey"
+          },
+          {
+            "name": "epoch_index",
+            "type": "u32"
+          },
+          {
+            "name": "observer",
+            "type": "pubkey"
+          },
+          {
+            "name": "observed_slot",
+            "type": "u64"
+          },
+          {
+            "name": "observed_unix_ts",
+            "type": "i64"
+          },
+          {
+            "name": "algorithm_version",
+            "type": "u32"
+          },
+          {
+            "name": "payload_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "evidence_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "EpochMetrics",
+      "docs": [
+        "The five integer metrics settlement compares against the mandate's thresholds. Measured off chain by the",
+        "canonical algorithm (docs/methodology/measurement-v1.md); the program never trusts a verdict, only these",
+        "integers, and recomputes compliance itself at finalization."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "effective_spread_bps",
+            "type": "u32"
+          },
+          {
+            "name": "pool_buy_depth_quote_raw",
+            "type": "u64"
+          },
+          {
+            "name": "pool_sell_depth_quote_raw",
+            "type": "u64"
+          },
+          {
+            "name": "provider_quote_in_band_raw",
+            "type": "u64"
+          },
+          {
+            "name": "provider_base_quote_eq_in_band_raw",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "InitializeProtocolArgs",
       "docs": [
         "All protocol bounds. Validated by `mandate_core::protocol::validate_protocol_params`."
@@ -2691,6 +3069,21 @@
             "name": "position_lock_at",
             "docs": [
               "Instant the provider's position set locks; registration is allowed strictly before it."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "algorithm_version",
+            "docs": [
+              "Measurement algorithm version attestations must carry, fixed at creation."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "unavailable_recovery_seconds",
+            "docs": [
+              "How long after an epoch ends a quorum may still be attested, and before which an epoch cannot be",
+              "finalized `Unavailable`. Fixed at creation."
             ],
             "type": "i64"
           },
@@ -3474,6 +3867,56 @@
       }
     },
     {
+      "name": "SubmitAttestationArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "epoch_index",
+            "type": "u32"
+          },
+          {
+            "name": "observed_slot",
+            "type": "u64"
+          },
+          {
+            "name": "observed_unix_ts",
+            "type": "i64"
+          },
+          {
+            "name": "algorithm_version",
+            "type": "u32"
+          },
+          {
+            "name": "payload_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "evidence_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "metrics",
+            "type": {
+              "defined": {
+                "name": "EpochMetrics"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "UnactivatedMandateRefunded",
       "type": {
         "kind": "struct",
@@ -3509,6 +3952,11 @@
     }
   ],
   "constants": [
+    {
+      "name": "ATTESTATION_SEED",
+      "type": "bytes",
+      "value": "[97, 116, 116, 101, 115, 116, 97, 116, 105, 111, 110]"
+    },
     {
       "name": "BID_SEED",
       "type": "bytes",

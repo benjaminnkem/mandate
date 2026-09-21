@@ -962,3 +962,179 @@ impl Env {
         self.send(&[ix], &[&signer])
     }
 }
+
+// ---- observers and attestations (Prompt 8) ---------------------------------------------------
+
+pub fn attestation_pda(mandate_key: &Pubkey, epoch: u32, observer: &Pubkey) -> Pubkey {
+    Pubkey::find_program_address(
+        &[
+            mandate::ATTESTATION_SEED,
+            mandate_key.as_ref(),
+            &epoch.to_le_bytes(),
+            observer.as_ref(),
+        ],
+        &mandate::ID,
+    )
+    .0
+}
+
+pub const EPOCH_SECONDS: i64 = 300;
+pub const START_AT: i64 = NOW + 7_200;
+pub const RECOVERY: i64 = 3_600;
+
+pub fn good_metrics() -> mandate::EpochMetrics {
+    mandate::EpochMetrics {
+        effective_spread_bps: 251,
+        pool_buy_depth_quote_raw: 63_491_020_966,
+        pool_sell_depth_quote_raw: 49_065_543_907,
+        provider_quote_in_band_raw: 91_107_867,
+        provider_base_quote_eq_in_band_raw: 81_314_309,
+    }
+}
+
+pub fn args_for(epoch: u32, observed_unix_ts: i64) -> mandate::SubmitAttestationArgs {
+    mandate::SubmitAttestationArgs {
+        epoch_index: epoch,
+        observed_slot: 448_786_149,
+        observed_unix_ts,
+        algorithm_version: 1,
+        payload_hash: [0xAA; 32],
+        evidence_hash: [0xBB; 32],
+        metrics: good_metrics(),
+    }
+}
+
+/// An `Active` mandate with a known 3-of-5... observer set: sponsor, provider, and three observer keys.
+pub struct Live {
+    pub env: Env,
+    pub sponsor: Keypair,
+    pub sponsor_usdc: Pubkey,
+    pub provider: Keypair,
+    pub observers: Vec<Keypair>,
+    pub mandate: Pubkey,
+    /// A second, independent mandate (own provider and position set), activated alongside the first.
+    pub other_mandate: Pubkey,
+}
+
+impl Live {
+    pub fn new() -> Self {
+        let mut env = Env::new();
+        env.initialize_ok();
+        let admin = env.admin.pubkey();
+        let observers: Vec<Keypair> = (0..3).map(|_| keypair()).collect();
+        let ix = env.ix_create_observer_set(
+            admin,
+            observer_set_pda(1),
+            observers.iter().map(|k| k.pubkey()).collect(),
+            2,
+        );
+        env.as_admin(&[ix]).expect("observer set");
+        for k in &observers {
+            env.svm.airdrop(&k.pubkey(), 10_000_000_000).unwrap();
+        }
+        let ix = env.ix_upsert_market(
+            admin,
+            env.pool,
+            env.base_mint,
+            env.usdc_mint,
+            market_pda(&env.pool),
+            [7u8; 32],
+        );
+        env.as_admin(&[ix]).expect("market");
+        let ix = env.ix_set_market_enabled(admin, market_pda(&env.pool), true);
+        env.as_admin(&[ix]).expect("enable");
+
+        let (sponsor, sponsor_usdc) = env.sponsor_with(5_000 * USDC);
+        env.create_mandate(&sponsor, &sponsor_usdc, env.valid_mandate_args(1))
+            .expect("mandate");
+        let mandate = mandate_pda(&sponsor.pubkey(), 1);
+        let provider = env.provider();
+        env.submit_bid(&provider, &mandate, 1, 900 * USDC, NOW + 5_000)
+            .unwrap();
+        env.accept_bid(
+            &sponsor,
+            &mandate,
+            &bid_pda(&mandate, &provider.pubkey(), 1),
+        )
+        .unwrap();
+        env.register_positions(
+            &provider,
+            &mandate,
+            vec![keypair().pubkey(), keypair().pubkey()],
+        )
+        .unwrap();
+        env.create_mandate(&sponsor, &sponsor_usdc, env.valid_mandate_args(2))
+            .expect("second mandate");
+        let other_mandate = mandate_pda(&sponsor.pubkey(), 2);
+        let other_provider = env.provider();
+        env.submit_bid(&other_provider, &other_mandate, 1, 800 * USDC, NOW + 5_000)
+            .unwrap();
+        env.accept_bid(
+            &sponsor,
+            &other_mandate,
+            &bid_pda(&other_mandate, &other_provider.pubkey(), 1),
+        )
+        .unwrap();
+        env.register_positions(&other_provider, &other_mandate, vec![keypair().pubkey()])
+            .unwrap();
+
+        env.warp_time(START_AT);
+        env.activate(&mandate).expect("activate");
+        env.activate(&other_mandate).expect("activate second");
+        Self {
+            env,
+            sponsor,
+            sponsor_usdc,
+            provider,
+            observers,
+            mandate,
+            other_mandate,
+        }
+    }
+
+    pub fn ix_attest(
+        &self,
+        observer: &Pubkey,
+        args: mandate::SubmitAttestationArgs,
+    ) -> Instruction {
+        let m: mandate::Mandate = self.env.load(&self.mandate);
+        self.ix_attest_with(observer, args, m.observer_set, m.position_set, None)
+    }
+
+    pub fn ix_attest_with(
+        &self,
+        observer: &Pubkey,
+        args: mandate::SubmitAttestationArgs,
+        observer_set: Pubkey,
+        position_set: Pubkey,
+        attestation: Option<Pubkey>,
+    ) -> Instruction {
+        let attestation = attestation
+            .unwrap_or_else(|| attestation_pda(&self.mandate, args.epoch_index, observer));
+        Instruction {
+            program_id: mandate::ID,
+            accounts: mandate::accounts::SubmitAttestation {
+                observer: *observer,
+                mandate: self.mandate,
+                observer_set,
+                position_set,
+                attestation,
+                system_program: pk(SYSTEM_PROGRAM),
+            }
+            .to_account_metas(None),
+            data: mandate::instruction::SubmitAttestation { args }.data(),
+        }
+    }
+
+    pub fn attest(&mut self, observer_index: usize, args: mandate::SubmitAttestationArgs) -> Sent {
+        let signer = Keypair::new_from_array(*self.observers[observer_index].secret_bytes());
+        let ix = self.ix_attest(&signer.pubkey(), args);
+        self.env.send(&[ix], &[&signer])
+    }
+
+    pub fn attest_as(&mut self, signer: &Keypair, args: mandate::SubmitAttestationArgs) -> Sent {
+        let signer = Keypair::new_from_array(*signer.secret_bytes());
+        let ix = self.ix_attest(&signer.pubkey(), args);
+        self.env.send(&[ix], &[&signer])
+    }
+}

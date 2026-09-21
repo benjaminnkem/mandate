@@ -42,6 +42,11 @@ pub struct Mandate {
     pub acceptance_cutoff: i64,
     /// Instant the provider's position set locks; registration is allowed strictly before it.
     pub position_lock_at: i64,
+    /// Measurement algorithm version attestations must carry, fixed at creation.
+    pub algorithm_version: u32,
+    /// How long after an epoch ends a quorum may still be attested, and before which an epoch cannot be
+    /// finalized `Unavailable`. Fixed at creation.
+    pub unavailable_recovery_seconds: i64,
 
     pub max_reward_raw: u64,
     pub accepted_reward_raw: u64,

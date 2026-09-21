@@ -165,3 +165,16 @@ pub struct UnactivatedMandateRefunded {
     /// Exact USDC returned: everything still in the vault.
     pub refunded_raw: u64,
 }
+
+#[event]
+pub struct EpochAttested {
+    pub attestation: Pubkey,
+    pub mandate: Pubkey,
+    pub epoch_index: u32,
+    pub observer: Pubkey,
+    pub observed_slot: u64,
+    pub observed_unix_ts: i64,
+    pub algorithm_version: u32,
+    pub payload_hash: [u8; 32],
+    pub evidence_hash: [u8; 32],
+}

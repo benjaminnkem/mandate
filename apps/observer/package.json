@@ -3,18 +3,22 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Mandate observer service",
+  "description": "Mandate observer: deterministic measurement, evidence persistence and signed onchain attestations",
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
     "dev": "node --watch src/main.ts",
-    "start": "node src/main.ts"
+    "start": "node src/main.ts",
+    "attest": "node src/cli.ts attest"
   },
   "dependencies": {
     "@mandate/config": "workspace:*",
+    "@mandate/domain": "workspace:*",
+    "@mandate/meteora": "workspace:*",
     "@mandate/observability": "workspace:*",
-    "@mandate/meteora": "workspace:*"
+    "@mandate/solana": "workspace:*",
+    "@solana/web3.js": "1.99.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

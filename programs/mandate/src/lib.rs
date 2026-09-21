@@ -2,8 +2,8 @@
 //!
 //! Implemented so far: protocol configuration, two-step admin transfer, new-risk pause, immutable
 //! versioned observer sets, the approved market registry, mandate creation with USDC escrow, open
-//! bidding, award, the provider's locked position set, and activation. Attestations and settlement
-//! arrive in later steps (docs/BUILD_PROMPTS.md).
+//! bidding, award, the provider's locked position set, activation, and observer attestations. Quorum
+//! finalization and settlement arrive in later steps (docs/BUILD_PROMPTS.md).
 //!
 //! Authoritative design: docs/TECHNICAL_SPEC.md sections 5 and 6.
 //!
@@ -140,5 +140,13 @@ pub mod mandate {
     /// Sponsor: recover the escrow of an awarded mandate whose provider never registered positions.
     pub fn refund_unactivated_mandate(ctx: Context<RefundUnactivatedMandate>) -> Result<()> {
         instructions::refund_unactivated_mandate::handle_refund_unactivated_mandate(ctx)
+    }
+
+    /// Observer: attest the measured metrics of one epoch. Accrues nothing; settlement needs a quorum.
+    pub fn submit_attestation(
+        ctx: Context<SubmitAttestation>,
+        args: SubmitAttestationArgs,
+    ) -> Result<()> {
+        instructions::submit_attestation::handle_submit_attestation(ctx, args)
     }
 }
