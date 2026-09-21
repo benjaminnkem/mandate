@@ -9,13 +9,19 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
     "dev": "node --watch src/main.ts",
-    "start": "node src/main.ts"
+    "start": "node src/main.ts",
+    "test:load": "LOAD_MANDATES=${LOAD_MANDATES:-2000} vitest run test/load.test.ts --disable-console-intercept"
   },
   "dependencies": {
+    "@anchor-lang/core": "1.2.0",
     "@mandate/config": "workspace:*",
-    "@mandate/observability": "workspace:*"
+    "@mandate/db": "workspace:*",
+    "@mandate/observability": "workspace:*",
+    "@mandate/solana": "workspace:*",
+    "@solana/web3.js": "1.99.0"
   },
   "devDependencies": {
+    "@mandate/testkit": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "26.6.2",

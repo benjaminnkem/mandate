@@ -63,6 +63,9 @@ export const apiEnvSchema = z
     PRESTOCKS_API_URL: httpUrl.default("https://prestocks.com/api/prestocks"),
     PRESTOCKS_CACHE_TTL_SECONDS: positiveInt.default(60),
     EVIDENCE_PUBLIC_BASE_URL: httpUrl.optional(),
+    RATE_LIMIT_PER_MINUTE: positiveInt.default(120),
+    /** Reads older than this many seconds are reported as stale by /readyz and in every response's meta. */
+    API_MAX_STALENESS_SECONDS: positiveInt.default(120),
   })
   .superRefine(rejectPublicMainnetRpc);
 export type ApiEnv = z.infer<typeof apiEnvSchema>;
@@ -74,6 +77,10 @@ export const indexerEnvSchema = z
     INDEXER_START_SIGNATURE_OR_SLOT: z.string().min(1).optional(),
     INDEXER_CONFIRMATION_LEVEL: z.enum(["confirmed", "finalized"]).default("confirmed"),
     INDEXER_RECONCILE_INTERVAL_SECONDS: positiveInt.default(300),
+    INDEXER_SYNC_INTERVAL_SECONDS: positiveInt.default(15),
+    /** Port for /healthz, /readyz and /metrics. */
+    OPS_PORT: positiveInt.default(9101),
+    INDEXER_MAX_SLOT_LAG: positiveInt.default(150),
   })
   .superRefine(rejectPublicMainnetRpc);
 export type IndexerEnv = z.infer<typeof indexerEnvSchema>;
@@ -87,6 +94,10 @@ export const schedulerEnvSchema = z
     SCHEDULER_RELAYER_KEYPAIR_PATH: z.string().min(1).optional(),
     EPOCH_JOB_LEAD_SECONDS: positiveInt.default(30),
     FINALIZE_RETRY_LIMIT: positiveInt.default(5),
+    /** Port for /healthz, /readyz and /metrics. */
+    OPS_PORT: positiveInt.default(9102),
+    SCHEDULER_TICK_SECONDS: positiveInt.default(10),
+    SCHEDULER_JOB_LEASE_SECONDS: positiveInt.default(120),
   })
   .superRefine(rejectPublicMainnetRpc);
 export type SchedulerEnv = z.infer<typeof schedulerEnvSchema>;

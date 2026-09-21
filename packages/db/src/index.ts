@@ -1,6 +1,6 @@
-/**
- * @mandate/db: PostgreSQL read-model schema and migrations.
- *
- * Scaffold only. Implemented in Prompt 11 of docs/BUILD_PROMPTS.md.
- */
-export {};
+export * from "./db.ts";
+export * from "./migrate.ts";
+export * from "./migrations.ts";
+export * from "./queue.ts";
+export * from "./readmodel.ts";
+export * from "./worker.ts";

@@ -57,7 +57,7 @@ as provider failure.
 
 ## Repository status
 
-Prompts 1 to 10 of [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md) are complete: the monorepo is scaffolded, the
+Prompts 1 to 11 of [`docs/BUILD_PROMPTS.md`](docs/BUILD_PROMPTS.md) are complete: the monorepo is scaffolded, the
 domain and settlement math exist in TypeScript and Rust with shared golden vectors, and a deterministic measurement
 engine reproduces real PreStocks/USDC Meteora DLMM measurements byte for byte from a recorded mainnet snapshot (see
 [`docs/research/current-market.md`](docs/research/current-market.md) and
@@ -65,17 +65,18 @@ engine reproduces real PreStocks/USDC Meteora DLMM measurements byte for byte fr
 foundation (configuration, two-step admin transfer, new-risk pause, immutable observer sets, approved-market registry)
 sponsor mandates with atomic USDC escrow in a program-owned vault, open provider bidding, sponsor award with the exact
 per-epoch reward split, surplus withdrawal, the provider's locked position set and permissionless activation. Epoch
-attestation (`submit_attestation`, stored per observer per epoch, accruing nothing) exists, driven by the leader/replay observer (ADR 0015). Quorum finalization, unavailable recovery, provider claims, sponsor exits, vault closing and a reconciliation CLI exist (ADRs 0016-0017). The indexer, database, API and web app do not exist yet, and no market is approved.
+attestation (`submit_attestation`, stored per observer per epoch, accruing nothing) exists, driven by the leader/replay observer (ADR 0015). Quorum finalization, unavailable recovery, provider claims, sponsor exits, vault closing and a reconciliation CLI exist (ADRs 0016-0017). The read plane exists (ADR 0018): PostgreSQL schema and migrations, an account-authoritative indexer with durable cursor and rebuild, an idempotent job queue and scheduler, a typed read API with unsigned transaction builders, Prometheus metrics and alert rules, and synthetic load tests. The web app does not exist yet, and no market is approved.
 
 | Area | State |
 | --- | --- |
-| `apps/web` (Next.js), `apps/api` (Fastify health/meta), `apps/indexer`, `apps/scheduler`, `apps/observer` | runnable shells with validated env |
+| `apps/web` (Next.js) | shell |
+| `apps/api`, `apps/indexer`, `apps/scheduler` | read API and tx builders, chain indexer, job scheduler (Prompt 11) |
 | `packages/config`, `packages/observability`, `packages/prestocks` | implemented and tested |
 | `packages/meteora` | canonical measurement engine v1, atomic snapshot record/replay, canonical evidence (Prompt 3) |
 | `packages/domain`, `crates/mandate-core` | integer money math, epoch/reward/compliance/accounting, validation (Prompt 2) |
 | `packages/solana` | IDL-driven TypeScript client, verified byte-for-byte against the Rust program (Prompt 5) |
 | `apps/observer` | leader/replay observer CLI: one key, deterministic epoch job, durable evidence, idempotent attestation (Prompt 8) |
-| `packages/db`, `packages/testkit` | empty shells |
+| `packages/db`, `packages/testkit` | Postgres schema, migrations, queue and read model (Prompt 11); labelled synthetic fixtures for tests |
 | `programs/mandate` | 23 instructions: protocol config, admin transfer, pause, observer sets, market registry, mandate + escrow, bidding, award, surplus withdrawal, position set, activation, unactivated refund, epoch attestation, quorum finalization, unavailable recovery, claims, closing (Prompts 4-10) |
 | `crates/mandate-core` | pure settlement + protocol validation + fail-closed `LbPair` reader |
 | `crates/program-tests` | 199 LiteSVM tests executing the compiled SBF binary, plus Rust-generated client vectors |
@@ -97,6 +98,9 @@ pnpm inspect:prestocks -- --symbol OPENAI
 pnpm market:discover -- --symbol OPENAI
 pnpm market:measure --pool <pool> --base-mint <mint> --provider <wallet> --positions <p1,p2>
 pnpm positions:inspect --pool <pool> --base-mint <mint> --provider <wallet> --positions <p1,p2>   # before registering
+pnpm db:migrate          # DATABASE_URL required
+pnpm indexer:rebuild     # destructive to derived tables only
+pnpm test:load           # SYNTHETIC load tests (reads and scheduling)
 pnpm reconcile:mandate <mandate-address>   # read-only ledger vs vault check; exits 1 on any mismatch
 ```
 

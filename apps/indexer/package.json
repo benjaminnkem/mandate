@@ -9,16 +9,23 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
     "dev": "node --watch src/main.ts",
-    "start": "node src/main.ts"
+    "start": "node src/main.ts",
+    "rebuild": "node src/main.ts rebuild"
   },
   "dependencies": {
+    "@anchor-lang/core": "1.2.0",
     "@mandate/config": "workspace:*",
-    "@mandate/observability": "workspace:*"
+    "@mandate/db": "workspace:*",
+    "@mandate/observability": "workspace:*",
+    "@mandate/solana": "workspace:*",
+    "@solana/web3.js": "1.99.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@types/bn.js": "5.2.0",
     "@types/node": "26.6.2",
+    "bn.js": "5.2.5",
     "eslint": "10.11.0",
     "typescript": "6.0.3",
     "vitest": "5.0.1"

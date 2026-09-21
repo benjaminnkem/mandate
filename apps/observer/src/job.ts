@@ -49,6 +49,8 @@ export interface JobConfig {
 }
 
 export interface JobDeps {
+  /** Called once per epoch job in which two or more OTHER observers' payload hashes disagree. */
+  onDisagreement?: () => void;
   readonly chain: ChainPort;
   readonly store: EvidenceStore;
   readonly measurer: Measurer;
@@ -177,6 +179,7 @@ export async function runEpochJob(
       return a ? [a] : [];
     });
   if (new Set(others.map((a) => a.payloadHash)).size > 1) {
+    deps.onDisagreement?.();
     logger.error(
       {
         mandate: input.mandate,

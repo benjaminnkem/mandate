@@ -23,7 +23,10 @@
     "idl:sync": "cp target/idl/mandate.json packages/solana/idl/mandate.json && UPDATE_VECTORS=1 cargo test -p program-tests --test client_vectors",
     "positions:inspect": "pnpm --filter @mandate/scripts positions:inspect",
     "observers:provision": "pnpm --filter @mandate/scripts observers:provision",
-    "reconcile:mandate": "pnpm --filter @mandate/scripts reconcile:mandate"
+    "reconcile:mandate": "pnpm --filter @mandate/scripts reconcile:mandate",
+    "db:migrate": "pnpm --filter @mandate/db migrate",
+    "indexer:rebuild": "pnpm --filter @mandate/indexer rebuild",
+    "test:load": "pnpm --filter @mandate/api test:load && pnpm --filter @mandate/scheduler test:load"
   },
   "devDependencies": {
     "prettier": "3.9.6",

@@ -1,0 +1,96 @@
+# Prometheus alerting rules for Mandate (docs/TECHNICAL_SPEC.md section 26).
+# Every metric named here is defined in packages/observability/src/metrics.ts; a test fails if one is missing.
+groups:
+  - name: mandate-settlement
+    rules:
+      - alert: MandateVaultMismatch
+        expr: reward_vault_reconciliation_failures > 0
+        for: 1m
+        labels: { severity: page }
+        annotations:
+          summary: "A reward vault does not match its ledger"
+          description: "{{ $value }} mandate(s) fail reconciliation. Run `pnpm reconcile:mandate <mandate>`; treat as an incident."
+
+      - alert: MandateVaultErrorNonZero
+        expr: reward_vault_reconciliation_error_raw > 0
+        for: 1m
+        labels: { severity: page }
+        annotations:
+          summary: "Vault balance differs from the ledger by {{ $value }} raw USDC units"
+
+      - alert: ObserverDisagreement
+        expr: increase(observer_payload_disagreements_total[15m]) > 0
+        labels: { severity: page }
+        annotations:
+          summary: "An observer's measurement disagreed with a peer's"
+          description: "Do not average. Compare the evidence bundles; see docs/methodology/measurement-v1.md."
+
+      - alert: EpochQuorumLate
+        expr: histogram_quantile(0.95, sum by (le) (rate(epoch_quorum_latency_seconds_bucket[30m]))) > 300
+        for: 10m
+        labels: { severity: warn }
+        annotations:
+          summary: "Epoch quorum is taking longer than 5 minutes after epoch end (p95)"
+
+      - alert: EpochFinalizationLate
+        expr: histogram_quantile(0.95, sum by (le) (rate(epoch_finalization_latency_seconds_bucket[30m]))) > 900
+        for: 10m
+        labels: { severity: warn }
+        annotations:
+          summary: "Epoch finalization is taking longer than 15 minutes after epoch end (p95)"
+
+      - alert: ObserverEpochFailures
+        expr: increase(observer_epoch_failures_total[30m]) > 3
+        labels: { severity: warn }
+        annotations:
+          summary: "Observer epoch jobs are failing repeatedly"
+
+      - alert: DeadLetteredJobs
+        expr: queue_dead_jobs > 0
+        for: 1m
+        labels: { severity: page }
+        annotations:
+          summary: "{{ $value }} job(s) were dead-lettered and need an operator"
+
+      - alert: DuplicateOrConflictingJobs
+        expr: increase(job_duplicate_attempts_total[30m]) > 0
+        labels: { severity: warn }
+        annotations:
+          summary: "A duplicate or conflicting job attempt was detected"
+
+      - alert: MarketPoolUnreadable
+        expr: market_pool_readable == 0
+        for: 5m
+        labels: { severity: page }
+        annotations:
+          summary: "Market pool {{ $labels.pool }} is no longer readable or valid"
+
+  - name: mandate-read-plane
+    rules:
+      - alert: IndexerBehind
+        expr: indexer_slot_lag > 150
+        for: 5m
+        labels: { severity: warn }
+        annotations:
+          summary: "The indexer is {{ $value }} slots behind the chain"
+
+      - alert: IndexerStalled
+        expr: time() - indexer_last_sync_timestamp_seconds > 120
+        for: 2m
+        labels: { severity: page }
+        annotations:
+          summary: "The indexer has not completed a sync in over two minutes"
+
+      - alert: ApiSlow
+        expr: histogram_quantile(0.95, sum by (le, route) (rate(api_request_latency_seconds_bucket[5m]))) > 1
+        for: 10m
+        labels: { severity: warn }
+        annotations:
+          summary: "API p95 latency above 1s on {{ $labels.route }}"
+
+      - alert: QueueBacklog
+        expr: sum(queue_depth{state="queued"}) > 500
+        for: 15m
+        labels: { severity: warn }
+        annotations:
+          summary: "More than 500 jobs have been queued for over 15 minutes"

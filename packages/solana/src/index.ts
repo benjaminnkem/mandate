@@ -8,3 +8,4 @@ export * from "./idl.ts";
 export * from "./instructions.ts";
 export * from "./pda.ts";
 export * from "./reconcile.ts";
+export * from "./events.ts";
