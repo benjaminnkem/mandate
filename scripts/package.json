@@ -18,14 +18,17 @@
   },
   "dependencies": {
     "@mandate/config": "workspace:*",
+    "@mandate/meteora": "workspace:*",
     "@mandate/prestocks": "workspace:*",
     "@mandate/solana": "workspace:*",
+    "@solana/spl-token": "0.4.15",
     "@solana/web3.js": "1.99.0",
-    "@mandate/meteora": "workspace:*"
+    "bn.js": "5.2.5"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@types/bn.js": "5.2.0",
     "@types/node": "26.6.2",
     "eslint": "10.11.0",
     "typescript": "6.0.3",

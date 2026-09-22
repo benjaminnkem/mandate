@@ -22,7 +22,7 @@ importers:
     dependencies:
       '@anchor-lang/core':
         specifier: 1.2.0
-        version: 1.2.0(bufferutil@4.1.0)(typescript@6.0.3)(utf-8-validate@6.0.6)
+        version: 1.2.0(bufferutil@4.1.0)(typescript@6.0.3)
       '@fastify/cors':
         specifier: 11.2.0
         version: 11.2.0
@@ -89,7 +89,7 @@ importers:
     dependencies:
       '@anchor-lang/core':
         specifier: 1.2.0
-        version: 1.2.0(bufferutil@4.1.0)(typescript@6.0.3)(utf-8-validate@6.0.6)
+        version: 1.2.0(bufferutil@4.1.0)(typescript@6.0.3)
       '@mandate/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -178,7 +178,7 @@ importers:
     dependencies:
       '@anchor-lang/core':
         specifier: 1.2.0
-        version: 1.2.0(bufferutil@4.1.0)(typescript@6.0.3)(utf-8-validate@6.0.6)
+        version: 1.2.0(bufferutil@4.1.0)(typescript@6.0.3)
       '@mandate/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -261,7 +261,7 @@ importers:
     devDependencies:
       '@anchor-lang/core':
         specifier: 1.2.0
-        version: 1.2.0(bufferutil@4.1.0)(typescript@6.0.3)(utf-8-validate@6.0.6)
+        version: 1.2.0(bufferutil@4.1.0)(typescript@6.0.3)
       '@axe-core/playwright':
         specifier: 4.10.2
         version: 4.10.2(playwright-core@1.57.0)
@@ -508,7 +508,7 @@ importers:
     dependencies:
       '@anchor-lang/core':
         specifier: 1.2.0
-        version: 1.2.0(bufferutil@4.1.0)(typescript@6.0.3)(utf-8-validate@6.0.6)
+        version: 1.2.0(bufferutil@4.1.0)(typescript@6.0.3)
       '@mandate/domain':
         specifier: workspace:*
         version: link:../domain
@@ -585,9 +585,15 @@ importers:
       '@mandate/solana':
         specifier: workspace:*
         version: link:../packages/solana
+      '@solana/spl-token':
+        specifier: 0.4.15
+        version: 0.4.15(@solana/web3.js@1.99.0(bufferutil@4.1.0)(typescript@6.0.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@6.0.3)(utf-8-validate@6.0.6)
       '@solana/web3.js':
         specifier: 1.99.0
         version: 1.99.0(bufferutil@4.1.0)(typescript@6.0.3)(utf-8-validate@6.0.6)
+      bn.js:
+        specifier: 5.2.5
+        version: 5.2.5
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
@@ -595,6 +601,9 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../packages/typescript-config
+      '@types/bn.js':
+        specifier: 5.2.0
+        version: 5.2.0
       '@types/node':
         specifier: 26.6.2
         version: 26.6.2
@@ -2970,7 +2979,7 @@ snapshots:
       bn.js: 5.2.5
       buffer-layout: 1.2.2
 
-  '@anchor-lang/core@1.2.0(bufferutil@4.1.0)(typescript@6.0.3)(utf-8-validate@6.0.6)':
+  '@anchor-lang/core@1.2.0(bufferutil@4.1.0)(typescript@6.0.3)':
     dependencies:
       '@anchor-lang/borsh': 1.2.0(@solana/web3.js@1.99.0(bufferutil@4.1.0)(typescript@6.0.3))
       '@anchor-lang/errors': 1.2.0

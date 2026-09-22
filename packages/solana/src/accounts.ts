@@ -85,28 +85,38 @@ export interface ProtocolConfigAccount {
 }
 
 export interface MandateAccount {
+  readonly version: number;
+  readonly bump: number;
   readonly sponsor: PublicKey;
   readonly mandateId: bigint;
   readonly marketConfig: PublicKey;
   readonly observerSet: PublicKey;
   readonly vault: PublicKey;
+  readonly createdAt: bigint;
+  readonly biddingEndsAt: bigint;
   readonly startAt: bigint;
   readonly epochSeconds: bigint;
   readonly totalEpochs: number;
   readonly endAt: bigint;
+  readonly acceptanceCutoff: bigint;
+  readonly positionLockAt: bigint;
   readonly algorithmVersion: number;
   readonly unavailableRecoverySeconds: bigint;
-  readonly depthBandBps: number;
-  readonly probeQuoteRaw: bigint;
+  readonly maxRewardRaw: bigint;
+  readonly acceptedRewardRaw: bigint;
+  readonly baseEpochRewardRaw: bigint;
+  readonly finalEpochExtraRaw: bigint;
   readonly maxEffectiveSpreadBps: number;
+  readonly depthBandBps: number;
   readonly minPoolBuyDepthQuoteRaw: bigint;
   readonly minPoolSellDepthQuoteRaw: bigint;
   readonly minProviderQuoteInBandRaw: bigint;
   readonly minProviderBaseQuoteEqInBandRaw: bigint;
+  readonly probeQuoteRaw: bigint;
+  /** `PublicKey.default()` until a bid is accepted. */
+  readonly acceptedBid: PublicKey;
   readonly provider: PublicKey;
   readonly positionSet: PublicKey;
-  readonly maxRewardRaw: bigint;
-  readonly acceptedRewardRaw: bigint;
   readonly finalizedEpochs: number;
   readonly compliantEpochs: number;
   readonly noncompliantEpochs: number;
