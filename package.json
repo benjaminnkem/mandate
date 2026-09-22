@@ -26,7 +26,8 @@
     "reconcile:mandate": "pnpm --filter @mandate/scripts reconcile:mandate",
     "db:migrate": "pnpm --filter @mandate/db migrate",
     "indexer:rebuild": "pnpm --filter @mandate/indexer rebuild",
-    "test:load": "pnpm --filter @mandate/api test:load && pnpm --filter @mandate/scheduler test:load"
+    "test:load": "pnpm --filter @mandate/api test:load && pnpm --filter @mandate/scheduler test:load",
+    "test:e2e": "pnpm --filter @mandate/web test:e2e"
   },
   "devDependencies": {
     "prettier": "3.9.6",

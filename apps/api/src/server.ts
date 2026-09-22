@@ -1,3 +1,4 @@
+import fastifyCors from "@fastify/cors";
 import fastifyRateLimit from "@fastify/rate-limit";
 import { indexStatus } from "@mandate/db";
 import type { Logger } from "@mandate/observability";
@@ -18,6 +19,11 @@ export async function buildServer(deps: ApiDeps, logger: Logger): Promise<Fastif
     disableRequestLogging: false,
     bodyLimit: 32 * 1024,
   });
+
+  // Every route here is either public read data or a transaction builder that signs nothing and holds no
+  // session/cookie; the wallet's own signature is the only authority that ever moves funds. Reflecting the
+  // request origin (rather than blocking cross-origin calls) is what lets the web app call this API directly.
+  await app.register(fastifyCors, { origin: true, methods: ["GET", "POST"] });
 
   await app.register(fastifyRateLimit, {
     max: deps.config.rateLimitPerMinute,

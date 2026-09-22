@@ -46,3 +46,9 @@ target/
 test-ledger/
 .surfpool/
 /evidence-store/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+apps/web/playwright/.cache/

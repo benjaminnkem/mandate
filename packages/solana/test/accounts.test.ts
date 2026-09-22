@@ -12,6 +12,7 @@ import {
   type MandateAccount,
   type ObserverSetAccount,
   type PositionSetAccount,
+  type ProtocolConfigAccount,
 } from "../src/index.ts";
 
 const coder = new BorshAccountsCoder(MANDATE_IDL);
@@ -79,6 +80,39 @@ describe("account decoding", () => {
     expect(a.metrics.effectiveSpreadBps).toBe(251);
     expect([...a.payloadHash].every((b) => b === 0xaa)).toBe(true);
     expect(typeof a.observedSlot).toBe("bigint");
+  });
+
+  it("decodes the protocol config exactly, including the pause flag and every bound", async () => {
+    const data = await build("ProtocolConfig", {
+      admin: k(1),
+      usdc_mint: k(5),
+      usdc_token_program: k(6),
+      dlmm_program: k(7),
+      paused_new_risk: true,
+      min_budget_raw: new BN("1000000"),
+      max_budget_raw: new BN("1000000000000"),
+      min_epoch_seconds: new BN(60),
+      max_epoch_seconds: new BN(3600),
+      max_duration_seconds: new BN(2_592_000),
+      max_epochs: 2016,
+      max_spread_bps: 20_000,
+      max_depth_band_bps: 5_000,
+      max_positions: 8,
+      min_probe_quote_raw: new BN("1000000"),
+      max_probe_quote_raw: new BN("1000000000"),
+      min_start_lead_seconds: new BN(3600),
+      position_lock_buffer_seconds: new BN(1800),
+      min_setup_window_seconds: new BN(900),
+      unavailable_recovery_seconds: new BN(3600),
+      current_observer_set_version: 3,
+    });
+    const p = decodeAccount<ProtocolConfigAccount>("ProtocolConfig", data);
+    expect(p.pausedNewRisk).toBe(true);
+    expect(p.usdcMint.equals(k(5))).toBe(true);
+    expect(p.maxBudgetRaw).toBe(1_000_000_000_000n);
+    expect(p.maxEpochs).toBe(2016);
+    expect(p.currentObserverSetVersion).toBe(3);
+    expect(p.pendingAdmin.equals(PublicKey.default)).toBe(true);
   });
 
   it("decodes a mandate, including negative-capable timestamps and the status enum", async () => {

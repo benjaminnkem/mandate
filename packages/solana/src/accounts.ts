@@ -59,6 +59,31 @@ export interface MetricsAccount {
   readonly providerBaseQuoteEqInBandRaw: bigint;
 }
 
+export interface ProtocolConfigAccount {
+  readonly admin: PublicKey;
+  readonly pendingAdmin: PublicKey;
+  readonly usdcMint: PublicKey;
+  readonly usdcTokenProgram: PublicKey;
+  readonly dlmmProgram: PublicKey;
+  readonly pausedNewRisk: boolean;
+  readonly minBudgetRaw: bigint;
+  readonly maxBudgetRaw: bigint;
+  readonly minEpochSeconds: bigint;
+  readonly maxEpochSeconds: bigint;
+  readonly maxDurationSeconds: bigint;
+  readonly maxEpochs: number;
+  readonly maxSpreadBps: number;
+  readonly maxDepthBandBps: number;
+  readonly maxPositions: number;
+  readonly minProbeQuoteRaw: bigint;
+  readonly maxProbeQuoteRaw: bigint;
+  readonly minStartLeadSeconds: bigint;
+  readonly positionLockBufferSeconds: bigint;
+  readonly minSetupWindowSeconds: bigint;
+  readonly unavailableRecoverySeconds: bigint;
+  readonly currentObserverSetVersion: number;
+}
+
 export interface MandateAccount {
   readonly sponsor: PublicKey;
   readonly mandateId: bigint;
