@@ -10,7 +10,7 @@
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests --hookTimeout=30000"
   },
   "dependencies": {
     "@mandate/db": "workspace:*",

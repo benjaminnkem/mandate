@@ -125,6 +125,12 @@ pub enum MandateError {
     EpochNotEnded,
     #[msg("The recovery deadline has not passed")]
     RecoveryNotElapsed,
+    #[msg("Division by zero in settlement math")]
+    DivisionByZero,
+    #[msg("This epoch was already finalized")]
+    EpochAlreadyFinalized,
+    #[msg("A settlement invariant was violated")]
+    InvariantViolation,
     #[msg("Unexpected settlement error")]
     Unexpected,
 }
@@ -150,7 +156,9 @@ impl From<MandateCoreError> for MandateError {
             MandateCoreError::InvalidThreshold => Self::InvalidThreshold,
             MandateCoreError::NothingToClaim => Self::NothingToClaim,
             MandateCoreError::ClaimExceedsEarned => Self::ClaimExceedsEarned,
-            _ => Self::Unexpected,
+            MandateCoreError::DivisionByZero => Self::DivisionByZero,
+            MandateCoreError::EpochAlreadyFinalized => Self::EpochAlreadyFinalized,
+            MandateCoreError::InvariantViolation => Self::InvariantViolation,
         }
     }
 }

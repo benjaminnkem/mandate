@@ -26,6 +26,9 @@ export const REDACTED_PATHS = [
   "REDIS_URL",
   "EVIDENCE_S3_SECRET_ACCESS_KEY",
   "CLAWPUMP_API_KEY",
+  "SOLANA_RPC_HTTP_URL",
+  "SOLANA_RPC_WS_URL",
+  "SOLANA_FALLBACK_RPC_HTTP_URL",
 ];
 
 export interface LoggerOptions {

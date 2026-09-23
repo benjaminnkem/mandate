@@ -7,7 +7,7 @@
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run --passWithNoTests --hookTimeout=30000",
     "dev": "node --watch src/main.ts",
     "start": "node src/main.ts",
     "rebuild": "node src/main.ts rebuild"

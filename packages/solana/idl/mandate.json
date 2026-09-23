@@ -2953,6 +2953,21 @@
     },
     {
       "code": 6060,
+      "name": "DivisionByZero",
+      "msg": "Division by zero in settlement math"
+    },
+    {
+      "code": 6061,
+      "name": "EpochAlreadyFinalized",
+      "msg": "This epoch was already finalized"
+    },
+    {
+      "code": 6062,
+      "name": "InvariantViolation",
+      "msg": "A settlement invariant was violated"
+    },
+    {
+      "code": 6063,
       "name": "Unexpected",
       "msg": "Unexpected settlement error"
     }

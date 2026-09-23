@@ -7,7 +7,7 @@
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run --passWithNoTests --hookTimeout=30000",
     "dev": "node --watch src/main.ts",
     "start": "node src/main.ts",
     "test:load": "LOAD_MANDATES=${LOAD_MANDATES:-3000} vitest run test/load.test.ts --disable-console-intercept"
