@@ -1,7 +1,9 @@
 "use client";
 
+import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 
+import { Button } from "./ui/button.tsx";
 import { shortAddress } from "../lib/format.ts";
 
 /** A shortened address, with the full value on hover/focus, and a copy-to-clipboard button. Never a link to an
@@ -9,14 +11,20 @@ import { shortAddress } from "../lib/format.ts";
 export function AddressTag({ address, label }: { address: string; label?: string }) {
   const [copied, setCopied] = useState(false);
   return (
-    <span className="row" style={{ gap: "0.35rem", display: "inline-flex", alignItems: "center" }}>
-      {label ? <span className="muted">{label}</span> : null}
-      <span className="mono" title={address}>
+    <span className="inline-flex items-center gap-1.5">
+      {label ? <span className="text-muted-foreground">{label}</span> : null}
+      <span className="font-mono-data" title={address}>
         {shortAddress(address)}
       </span>
-      <button
+      <Button
         type="button"
-        aria-label={`Copy ${label ?? "address"} ${address} to clipboard`}
+        variant="ghost"
+        size="icon-xs"
+        aria-label={
+          copied
+            ? `Copied ${label ?? "address"} ${address}`
+            : `Copy ${label ?? "address"} ${address} to clipboard`
+        }
         onClick={() => {
           navigator.clipboard
             .writeText(address)
@@ -28,10 +36,9 @@ export function AddressTag({ address, label }: { address: string; label?: string
             })
             .catch(() => undefined);
         }}
-        style={{ padding: "0.1rem 0.4rem", fontSize: "0.75rem" }}
       >
-        {copied ? "Copied" : "Copy"}
-      </button>
+        {copied ? <Check className="text-ok-foreground" /> : <Copy />}
+      </Button>
     </span>
   );
 }

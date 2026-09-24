@@ -1,12 +1,10 @@
-export function Loading({ label = "Loading…" }: { label?: string }) {
+import { Skeleton } from "./ui/skeleton.tsx";
+
+export function Loading({ label = "Loading" }: { label?: string }) {
   return (
-    <p role="status" className="muted">
+    <div role="status" className="text-muted-foreground">
       <span className="visually-hidden">{label}</span>
-      <span
-        aria-hidden="true"
-        className="skeleton"
-        style={{ display: "block", height: "1.2em", maxWidth: "16rem" }}
-      />
-    </p>
+      <Skeleton aria-hidden="true" className="h-5 max-w-64" />
+    </div>
   );
 }

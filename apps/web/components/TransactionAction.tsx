@@ -1,7 +1,17 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { AlarmClockOff, CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { useState } from "react";
 
+import { Button } from "./ui/button.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog.tsx";
 import { amountPair, type AmountPair } from "../lib/format.ts";
 import { getConnection } from "../lib/solana/connection.ts";
 import { pollForConfirmation, type PreparedTransaction } from "../lib/solana/transactions.ts";
@@ -42,20 +52,28 @@ function humanize(key: string): string {
  * else is printed as given. Unknown future summary fields still show up instead of silently disappearing. */
 function SummaryList({ summary }: { summary: Record<string, unknown> }) {
   return (
-    <dl className="stack" style={{ gap: "0.4rem" }}>
+    <dl className="flex flex-col gap-2 rounded-md border bg-muted/40 p-3 text-sm">
       {Object.entries(summary).map(([key, value]) => (
-        <div className="row" key={key} style={{ justifyContent: "space-between", gap: "1rem" }}>
-          <dt className="muted">{humanize(key)}</dt>
-          <dd style={{ margin: 0, textAlign: "right" }}>
+        <div className="flex items-baseline justify-between gap-4" key={key}>
+          <dt className="text-muted-foreground">{humanize(key)}</dt>
+          <dd className="m-0 text-right">
             {isAmountPair(value) ? (
-              <span className="amount">
-                <span className="usdc">{value.usdc} USDC</span>{" "}
-                <span className="raw">({value.raw} raw)</span>
+              <span>
+                <span className="font-medium">{value.usdc} USDC</span>{" "}
+                <span className="font-mono-data text-xs text-muted-foreground">
+                  ({value.raw} raw)
+                </span>
               </span>
             ) : Array.isArray(value) ? (
-              <span className="mono">{value.map(String).join(", ")}</span>
+              <span className="font-mono-data break-all">{value.map(String).join(", ")}</span>
             ) : (
-              <span className={typeof value === "string" && value.length > 40 ? "mono" : undefined}>
+              <span
+                className={
+                  typeof value === "string" && value.length > 40
+                    ? "font-mono-data break-all"
+                    : undefined
+                }
+              >
                 {String(value)}
               </span>
             )}
@@ -70,6 +88,7 @@ export interface TransactionActionProps {
   /** Text on the trigger button, e.g. "Submit bid". */
   readonly label: string;
   readonly disabled?: boolean;
+  readonly variant?: "default" | "outline" | "destructive";
   /** Build the unsigned transaction and its exact economic summary. Called fresh every time the dialog opens. */
   readonly prepare: () => Promise<PreparedTransaction>;
   readonly onConfirmed?: (signature: string) => void;
@@ -84,21 +103,15 @@ export interface TransactionActionProps {
 export function TransactionAction({
   label,
   disabled,
+  variant = "default",
   prepare,
   onConfirmed,
 }: TransactionActionProps) {
   const wallet = useWallet();
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
-  const headingId = useId();
-  const dialogRef = useRef<HTMLDivElement | null>(null);
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   const open = phase.kind !== "idle";
   const settling = phase.kind === "signing" || phase.kind === "pending";
-
-  useEffect(() => {
-    if (open) dialogRef.current?.focus();
-  }, [open]);
 
   async function start() {
     setPhase({ kind: "building" });
@@ -116,7 +129,6 @@ export function TransactionAction({
   function close() {
     if (settling) return; // never abandon the dialog mid-flight; the chain result must be seen
     setPhase({ kind: "idle" });
-    triggerRef.current?.focus();
   }
 
   async function confirm() {
@@ -146,139 +158,139 @@ export function TransactionAction({
 
   return (
     <>
-      <button
-        ref={triggerRef}
-        type="button"
-        className="primary"
-        disabled={disabled}
-        onClick={() => void start()}
-      >
+      <Button type="button" variant={variant} disabled={disabled} onClick={() => void start()}>
         {label}
-      </button>
-      {open ? (
-        <div
-          className="dialog-backdrop"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) close();
-          }}
-        >
-          <div
-            ref={dialogRef}
-            className="dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={headingId}
-            tabIndex={-1}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") close();
-            }}
-          >
-            <h2 id={headingId} style={{ marginTop: 0 }}>
-              {label}
-            </h2>
-
-            {phase.kind === "building" ? <p>Preparing the transaction…</p> : null}
-
-            {phase.kind === "error" ? (
-              <>
-                <p role="alert" className="notice danger">
-                  {phase.message}
-                </p>
-                <button type="button" onClick={close}>
-                  Close
-                </button>
-              </>
-            ) : null}
-
-            {(phase.kind === "review" ||
-              phase.kind === "signing" ||
-              phase.kind === "pending" ||
-              phase.kind === "confirmed" ||
-              phase.kind === "failed" ||
-              phase.kind === "expired") && <SummaryList summary={phase.summary} />}
-
+      </Button>
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          if (!next) close();
+        }}
+      >
+        <DialogContent showCloseButton={!settling}>
+          <DialogHeader>
+            <DialogTitle>{label}</DialogTitle>
             {phase.kind === "review" ? (
-              <div className="stack" style={{ marginTop: "1rem" }}>
-                <p className="notice warn">
-                  This is irreversible once confirmed on chain. Review every value above against
-                  what your wallet shows before approving.
-                  {phase.expiresAfterBlockHeight !== undefined
-                    ? ` This quote is valid until block height ${phase.expiresAfterBlockHeight.toLocaleString()}; a fresh blockhash is fetched right before signing.`
-                    : ""}
-                </p>
-                <div className="row" style={{ justifyContent: "flex-end" }}>
-                  <button type="button" onClick={close}>
-                    Cancel
-                  </button>
-                  <button type="button" className="primary" onClick={() => void confirm()}>
-                    Confirm in wallet
-                  </button>
-                </div>
-              </div>
+              <DialogDescription>
+                This is irreversible once confirmed on chain. Review every value below against what
+                your wallet shows before approving.
+              </DialogDescription>
             ) : null}
+          </DialogHeader>
 
-            {phase.kind === "signing" ? (
-              <p aria-live="polite" className="status" data-status="signing">
-                Awaiting your signature in the wallet…
+          {phase.kind === "building" ? (
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              Preparing the transaction.
+            </p>
+          ) : null}
+
+          {phase.kind === "error" ? (
+            <p
+              role="alert"
+              className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+            >
+              {phase.message}
+            </p>
+          ) : null}
+
+          {phase.kind === "review" ||
+          phase.kind === "signing" ||
+          phase.kind === "pending" ||
+          phase.kind === "confirmed" ||
+          phase.kind === "failed" ||
+          phase.kind === "expired" ? (
+            <SummaryList summary={phase.summary} />
+          ) : null}
+
+          {phase.kind === "review" ? (
+            <p className="text-xs text-muted-foreground">
+              {phase.expiresAfterBlockHeight !== undefined
+                ? `This quote is valid until block height ${phase.expiresAfterBlockHeight.toLocaleString()}. A fresh blockhash is fetched right before signing.`
+                : null}
+            </p>
+          ) : null}
+
+          {phase.kind === "signing" ? (
+            <p
+              aria-live="polite"
+              className="flex items-center gap-2 text-sm text-pending-foreground"
+            >
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              Awaiting your signature in the wallet.
+            </p>
+          ) : null}
+
+          {phase.kind === "pending" ? (
+            <div aria-live="polite" className="flex flex-col gap-1.5 text-sm">
+              <p className="flex items-center gap-2 text-pending-foreground">
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                Pending confirmation
               </p>
-            ) : null}
+              <p className="break-all font-mono-data text-xs text-muted-foreground">
+                signature {phase.signature}
+              </p>
+            </div>
+          ) : null}
 
-            {phase.kind === "pending" ? (
-              <div aria-live="polite" className="stack" style={{ marginTop: "0.75rem" }}>
-                <span className="status" data-status="pending">
-                  Pending confirmation
-                </span>
-                <p className="muted mono" style={{ fontSize: "0.8rem" }}>
-                  signature {phase.signature}
-                </p>
-              </div>
-            ) : null}
+          {phase.kind === "confirmed" ? (
+            <div aria-live="polite" className="flex flex-col gap-1.5 text-sm">
+              <p className="flex items-center gap-2 text-ok-foreground">
+                <CheckCircle2 className="size-4" aria-hidden="true" />
+                Confirmed
+              </p>
+              <p className="break-all font-mono-data text-xs text-muted-foreground">
+                signature {phase.signature}
+              </p>
+            </div>
+          ) : null}
 
-            {phase.kind === "confirmed" ? (
-              <div aria-live="polite" className="stack" style={{ marginTop: "0.75rem" }}>
-                <span className="status" data-status="confirmed">
-                  Confirmed
-                </span>
-                <p className="muted mono" style={{ fontSize: "0.8rem" }}>
-                  signature {phase.signature}
-                </p>
-                <button type="button" onClick={close}>
-                  Done
-                </button>
-              </div>
-            ) : null}
+          {phase.kind === "failed" ? (
+            <div aria-live="assertive" className="flex flex-col gap-1.5 text-sm">
+              <p className="flex items-center gap-2 text-destructive">
+                <XCircle className="size-4" aria-hidden="true" />
+                Failed on chain
+              </p>
+              <p className="font-mono-data text-xs">{phase.reason}</p>
+            </div>
+          ) : null}
 
-            {phase.kind === "failed" ? (
-              <div aria-live="assertive" className="stack" style={{ marginTop: "0.75rem" }}>
-                <span className="status" data-status="failed">
-                  Failed on chain
-                </span>
-                <p className="mono" style={{ fontSize: "0.8rem" }}>
-                  {phase.reason}
-                </p>
-                <button type="button" onClick={close}>
-                  Close
-                </button>
-              </div>
-            ) : null}
+          {phase.kind === "expired" ? (
+            <div aria-live="assertive" className="flex flex-col gap-1.5 text-sm">
+              <p className="flex items-center gap-2 text-warn-foreground">
+                <AlarmClockOff className="size-4" aria-hidden="true" />
+                Expired before confirming
+              </p>
+              <p className="text-muted-foreground">
+                Its blockhash went stale before the network confirmed it. It never took effect;
+                nothing was charged. You can try again.
+              </p>
+            </div>
+          ) : null}
 
-            {phase.kind === "expired" ? (
-              <div aria-live="assertive" className="stack" style={{ marginTop: "0.75rem" }}>
-                <span className="status" data-status="expired">
-                  Expired before confirming
-                </span>
-                <p className="muted" style={{ fontSize: "0.85rem" }}>
-                  Its blockhash went stale before the network confirmed it. It never took effect;
-                  nothing was charged. You can try again.
-                </p>
-                <button type="button" onClick={close}>
-                  Close
-                </button>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
+          {phase.kind === "review" ? (
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={close}>
+                Cancel
+              </Button>
+              <Button type="button" onClick={() => void confirm()}>
+                Confirm in wallet
+              </Button>
+            </DialogFooter>
+          ) : null}
+
+          {phase.kind === "error" ||
+          phase.kind === "confirmed" ||
+          phase.kind === "failed" ||
+          phase.kind === "expired" ? (
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={close}>
+                Close
+              </Button>
+            </DialogFooter>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

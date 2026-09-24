@@ -6,6 +6,9 @@ import { useEffect, useMemo, useState } from "react";
 import { ErrorNotice } from "../../../components/ErrorNotice.tsx";
 import { Loading } from "../../../components/Loading.tsx";
 import { TransactionAction } from "../../../components/TransactionAction.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card.tsx";
+import { Input } from "../../../components/ui/input.tsx";
+import { Label } from "../../../components/ui/label.tsx";
 import { listMarkets } from "../../../lib/api.ts";
 import { loadProtocolConfig, prepareCreateMandate } from "../../../lib/solana/create-mandate.ts";
 import { useWallet } from "../../../lib/solana/wallet-standard.tsx";
@@ -16,6 +19,19 @@ function usdcToRaw(decimal: string): bigint {
   const [whole, frac = ""] = decimal.split(".");
   const paddedFrac = frac.padEnd(6, "0").slice(0, 6);
   return BigInt(whole || "0") * 1_000_000n + BigInt(paddedFrac || "0");
+}
+
+function Field({
+  id,
+  label,
+  ...inputProps
+}: { id: string; label: string } & React.ComponentProps<typeof Input>) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <Input id={id} {...inputProps} />
+    </div>
+  );
 }
 
 export default function CreateMandatePage() {
@@ -84,7 +100,7 @@ export default function CreateMandatePage() {
       }
       if (epochSeconds * epochs > Number(protocol.maxDurationSeconds)) {
         problems.push(
-          "Epoch length × total epochs exceeds the protocol's maximum mandate duration.",
+          "Epoch length times total epochs exceeds the protocol's maximum mandate duration.",
         );
       }
       if (Number(maxSpreadBps) > protocol.maxSpreadBps) {
@@ -131,187 +147,174 @@ export default function CreateMandatePage() {
   if (!markets || !protocol) return <Loading label="Loading protocol configuration" />;
 
   return (
-    <div className="stack" style={{ maxWidth: "56ch" }}>
+    <div className="flex max-w-[56ch] flex-col gap-6">
       <div>
-        <h1>Create a mandate</h1>
-        <p className="lede">
+        <h1 className="text-2xl font-semibold tracking-tight">Create a mandate</h1>
+        <p className="mt-2 text-muted-foreground">
           Every value below is fixed permanently once the mandate is created and its USDC reward is
-          escrowed. There is no edit instruction — a mistake here can only be corrected by letting
-          the mandate run its course (or, before any bid is accepted, cancelling it and getting the
-          escrow back).
+          escrowed. There is no edit instruction: a mistake here can only be corrected by letting
+          the mandate run its course, or, before any bid is accepted, cancelling it and getting the
+          escrow back.
         </p>
       </div>
 
       {markets.length === 0 ? (
-        <p className="notice warn">No market is approved yet, so a mandate cannot be created.</p>
+        <p className="rounded-md border border-warn/40 bg-warn-bg px-3 py-2 text-sm text-warn-foreground">
+          No market is approved yet, so a mandate cannot be created.
+        </p>
       ) : (
         <>
-          <section className="card">
-            <h2 style={{ marginTop: 0 }}>Market</h2>
-            <div className="field">
-              <label htmlFor="pool">Approved pool</label>
-              <select
-                id="pool"
-                value={pool}
+          <Card>
+            <CardHeader>
+              <CardTitle>Market</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="pool">Approved pool</Label>
+                <select
+                  id="pool"
+                  value={pool}
+                  onChange={(e) => {
+                    setPool(e.target.value);
+                  }}
+                  className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 font-mono-data text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+                >
+                  {markets.map((m) => (
+                    <option key={m.address} value={m.account.pool}>
+                      {m.account.pool}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Reward and schedule</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 sm:grid-cols-2">
+              <Field
+                id="maxReward"
+                label="Maximum reward (USDC)"
+                inputMode="decimal"
+                value={maxReward}
                 onChange={(e) => {
-                  setPool(e.target.value);
+                  setMaxReward(e.target.value);
                 }}
-              >
-                {markets.map((m) => (
-                  <option key={m.address} value={m.account.pool}>
-                    {m.account.pool}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </section>
+              />
+              <Field
+                id="totalEpochs"
+                label="Total epochs"
+                inputMode="numeric"
+                value={totalEpochs}
+                onChange={(e) => {
+                  setTotalEpochs(e.target.value);
+                }}
+              />
+              <Field
+                id="epochMinutes"
+                label="Epoch length (minutes)"
+                inputMode="numeric"
+                value={epochMinutes}
+                onChange={(e) => {
+                  setEpochMinutes(e.target.value);
+                }}
+              />
+              <Field
+                id="startInHours"
+                label="Starts in (hours from now)"
+                inputMode="numeric"
+                value={startInHours}
+                onChange={(e) => {
+                  setStartInHours(e.target.value);
+                }}
+              />
+              <Field
+                id="biddingWindowHours"
+                label="Bidding closes in (hours from now)"
+                inputMode="numeric"
+                value={biddingWindowHours}
+                onChange={(e) => {
+                  setBiddingWindowHours(e.target.value);
+                }}
+              />
+            </CardContent>
+          </Card>
 
-          <section className="card">
-            <h2 style={{ marginTop: 0 }}>Reward and schedule</h2>
-            <div className="grid">
-              <div className="field">
-                <label htmlFor="maxReward">Maximum reward (USDC)</label>
-                <input
-                  id="maxReward"
-                  inputMode="decimal"
-                  value={maxReward}
-                  onChange={(e) => {
-                    setMaxReward(e.target.value);
-                  }}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="totalEpochs">Total epochs</label>
-                <input
-                  id="totalEpochs"
-                  inputMode="numeric"
-                  value={totalEpochs}
-                  onChange={(e) => {
-                    setTotalEpochs(e.target.value);
-                  }}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="epochMinutes">Epoch length (minutes)</label>
-                <input
-                  id="epochMinutes"
-                  inputMode="numeric"
-                  value={epochMinutes}
-                  onChange={(e) => {
-                    setEpochMinutes(e.target.value);
-                  }}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="startInHours">Starts in (hours from now)</label>
-                <input
-                  id="startInHours"
-                  inputMode="numeric"
-                  value={startInHours}
-                  onChange={(e) => {
-                    setStartInHours(e.target.value);
-                  }}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="biddingWindowHours">Bidding closes in (hours from now)</label>
-                <input
-                  id="biddingWindowHours"
-                  inputMode="numeric"
-                  value={biddingWindowHours}
-                  onChange={(e) => {
-                    setBiddingWindowHours(e.target.value);
-                  }}
-                />
-              </div>
-            </div>
-          </section>
-
-          <section className="card">
-            <h2 style={{ marginTop: 0 }}>Quality thresholds</h2>
-            <div className="grid">
-              <div className="field">
-                <label htmlFor="maxSpreadBps">Max effective spread (bps)</label>
-                <input
-                  id="maxSpreadBps"
-                  inputMode="numeric"
-                  value={maxSpreadBps}
-                  onChange={(e) => {
-                    setMaxSpreadBps(e.target.value);
-                  }}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="depthBandBps">Depth band (bps)</label>
-                <input
-                  id="depthBandBps"
-                  inputMode="numeric"
-                  value={depthBandBps}
-                  onChange={(e) => {
-                    setDepthBandBps(e.target.value);
-                  }}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="minBuyDepth">Min pool buy depth (USDC)</label>
-                <input
-                  id="minBuyDepth"
-                  inputMode="decimal"
-                  value={minBuyDepth}
-                  onChange={(e) => {
-                    setMinBuyDepth(e.target.value);
-                  }}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="minSellDepth">Min pool sell depth (USDC)</label>
-                <input
-                  id="minSellDepth"
-                  inputMode="decimal"
-                  value={minSellDepth}
-                  onChange={(e) => {
-                    setMinSellDepth(e.target.value);
-                  }}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="minProviderQuote">Min provider quote in band (USDC)</label>
-                <input
-                  id="minProviderQuote"
-                  inputMode="decimal"
-                  value={minProviderQuote}
-                  onChange={(e) => {
-                    setMinProviderQuote(e.target.value);
-                  }}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="minProviderBase">Min provider base in band (USDC-eq.)</label>
-                <input
-                  id="minProviderBase"
-                  inputMode="decimal"
-                  value={minProviderBase}
-                  onChange={(e) => {
-                    setMinProviderBase(e.target.value);
-                  }}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="probeSize">Probe size (USDC)</label>
-                <input
-                  id="probeSize"
-                  inputMode="decimal"
-                  value={probeSize}
-                  onChange={(e) => {
-                    setProbeSize(e.target.value);
-                  }}
-                />
-              </div>
-            </div>
-          </section>
+          <Card>
+            <CardHeader>
+              <CardTitle>Quality thresholds</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 sm:grid-cols-2">
+              <Field
+                id="maxSpreadBps"
+                label="Max effective spread (bps)"
+                inputMode="numeric"
+                value={maxSpreadBps}
+                onChange={(e) => {
+                  setMaxSpreadBps(e.target.value);
+                }}
+              />
+              <Field
+                id="depthBandBps"
+                label="Depth band (bps)"
+                inputMode="numeric"
+                value={depthBandBps}
+                onChange={(e) => {
+                  setDepthBandBps(e.target.value);
+                }}
+              />
+              <Field
+                id="minBuyDepth"
+                label="Min pool buy depth (USDC)"
+                inputMode="decimal"
+                value={minBuyDepth}
+                onChange={(e) => {
+                  setMinBuyDepth(e.target.value);
+                }}
+              />
+              <Field
+                id="minSellDepth"
+                label="Min pool sell depth (USDC)"
+                inputMode="decimal"
+                value={minSellDepth}
+                onChange={(e) => {
+                  setMinSellDepth(e.target.value);
+                }}
+              />
+              <Field
+                id="minProviderQuote"
+                label="Min provider quote in band (USDC)"
+                inputMode="decimal"
+                value={minProviderQuote}
+                onChange={(e) => {
+                  setMinProviderQuote(e.target.value);
+                }}
+              />
+              <Field
+                id="minProviderBase"
+                label="Min provider base in band (USDC-eq.)"
+                inputMode="decimal"
+                value={minProviderBase}
+                onChange={(e) => {
+                  setMinProviderBase(e.target.value);
+                }}
+              />
+              <Field
+                id="probeSize"
+                label="Probe size (USDC)"
+                inputMode="decimal"
+                value={probeSize}
+                onChange={(e) => {
+                  setProbeSize(e.target.value);
+                }}
+              />
+            </CardContent>
+          </Card>
 
           {errors.length > 0 ? (
-            <ul className="notice warn">
+            <ul className="flex list-disc flex-col gap-1 rounded-md border border-warn/40 bg-warn-bg py-2 pl-8 pr-3 text-sm text-warn-foreground">
               {errors.map((e) => (
                 <li key={e}>{e}</li>
               ))}

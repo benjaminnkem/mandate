@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { AddressTag } from "../../components/AddressTag.tsx";
 import { ErrorNotice } from "../../components/ErrorNotice.tsx";
 import { Loading } from "../../components/Loading.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.tsx";
 import { getMarketQuality, listMarkets } from "../../lib/api.ts";
 import { formatBps, formatUnixSeconds, usdc } from "../../lib/format.ts";
 import type { MarketQuality } from "../../lib/types.ts";
@@ -59,12 +60,12 @@ export default function MarketsPage() {
   }, []);
 
   return (
-    <div className="stack">
+    <div className="flex flex-col gap-6">
       <div>
-        <h1>Approved markets</h1>
-        <p className="lede">
+        <h1 className="text-2xl font-semibold tracking-tight">Approved markets</h1>
+        <p className="mt-2 max-w-[60ch] text-muted-foreground">
           Every pool below has been reviewed and enabled by the protocol admin. The figures shown
-          are the most recently attested epoch on any mandate for that pool, not a live quote — they
+          are the most recently attested epoch on any mandate for that pool, not a live quote. They
           carry the exact slot and time they were measured at.
         </p>
       </div>
@@ -72,50 +73,63 @@ export default function MarketsPage() {
       {state.status === "loading" ? <Loading label="Loading approved markets" /> : null}
       {state.status === "error" ? <ErrorNotice error={state.error} /> : null}
       {state.status === "ready" && state.markets.length === 0 ? (
-        <p className="muted">No market is approved yet.</p>
+        <p className="text-muted-foreground">No market is approved yet.</p>
       ) : null}
 
       {state.status === "ready" ? (
-        <div className="grid">
+        <div className="grid gap-3 sm:grid-cols-2">
           {state.markets.map((m) => (
-            <article className="card" key={m.pool}>
-              <h2 style={{ marginTop: 0 }}>
-                <AddressTag address={m.pool} label="Pool" />
-              </h2>
-              {!m.enabled ? <p className="notice warn">Currently disabled by the admin.</p> : null}
-              {m.quality?.latestAttestedEpoch ? (
-                <div className="stack" style={{ gap: "0.4rem" }}>
-                  <div className="row" style={{ justifyContent: "space-between" }}>
-                    <span className="muted">Effective spread (aggregate pool)</span>
-                    <strong>
-                      {formatBps(m.quality.latestAttestedEpoch.aggregatePool.effectiveSpreadBps)}
-                    </strong>
-                  </div>
-                  <div className="row" style={{ justifyContent: "space-between" }}>
-                    <span className="muted">Pool buy / sell depth</span>
-                    <span>
-                      {usdc(m.quality.latestAttestedEpoch.aggregatePool.buyDepthQuoteRaw)} /{" "}
-                      {usdc(m.quality.latestAttestedEpoch.aggregatePool.sellDepthQuoteRaw)} USDC
-                    </span>
-                  </div>
-                  <div className="row" style={{ justifyContent: "space-between" }}>
-                    <span className="muted">Provider contribution (quote-equivalent)</span>
-                    <span>
-                      {usdc(m.quality.latestAttestedEpoch.providerContribution.quoteInBandRaw)} USDC
-                    </span>
-                  </div>
-                  <p className="muted" style={{ fontSize: "0.82rem", marginBottom: 0 }}>
-                    Measured {formatUnixSeconds(m.quality.latestAttestedEpoch.observedUnixTs)} ·
-                    outcome {m.quality.latestAttestedEpoch.outcome} · mandate{" "}
-                    <AddressTag address={m.quality.latestAttestedEpoch.mandate} />
+            <Card key={m.pool}>
+              <CardHeader>
+                <CardTitle>
+                  <AddressTag address={m.pool} label="Pool" />
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                {!m.enabled ? (
+                  <p className="rounded-md border border-warn/40 bg-warn-bg px-3 py-2 text-sm text-warn-foreground">
+                    Currently disabled by the admin.
                   </p>
-                </div>
-              ) : (
-                <p className="muted">
-                  {m.quality?.note ?? "No epoch has been attested on this market yet."}
-                </p>
-              )}
-            </article>
+                ) : null}
+                {m.quality?.latestAttestedEpoch ? (
+                  <div className="flex flex-col gap-1.5 text-sm">
+                    <div className="flex justify-between gap-4">
+                      <span className="text-muted-foreground">
+                        Effective spread (aggregate pool)
+                      </span>
+                      <strong>
+                        {formatBps(m.quality.latestAttestedEpoch.aggregatePool.effectiveSpreadBps)}
+                      </strong>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-muted-foreground">Pool buy / sell depth</span>
+                      <span>
+                        {usdc(m.quality.latestAttestedEpoch.aggregatePool.buyDepthQuoteRaw)} /{" "}
+                        {usdc(m.quality.latestAttestedEpoch.aggregatePool.sellDepthQuoteRaw)} USDC
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-muted-foreground">
+                        Provider contribution (quote-equivalent)
+                      </span>
+                      <span>
+                        {usdc(m.quality.latestAttestedEpoch.providerContribution.quoteInBandRaw)}{" "}
+                        USDC
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Measured {formatUnixSeconds(m.quality.latestAttestedEpoch.observedUnixTs)}.
+                      Outcome {m.quality.latestAttestedEpoch.outcome}, mandate{" "}
+                      <AddressTag address={m.quality.latestAttestedEpoch.mandate} />
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {m.quality?.note ?? "No epoch has been attested on this market yet."}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           ))}
         </div>
       ) : null}
