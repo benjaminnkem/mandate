@@ -182,8 +182,8 @@ export default function MandateDetailPage() {
           <>
             <p className="muted">Locked {formatUnixSeconds(m.positionSet.account.lockedAt)}</p>
             <ul>
-              {m.positionSet.account.positions.map((p) => (
-                <li key={p} className="mono">
+              {m.positionSet.account.positions.slice(0, m.positionSet.account.positionCount).map((p, i) => (
+                <li key={`${String(i)}-${p}`} className="mono">
                   {p}
                 </li>
               ))}
