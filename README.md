@@ -92,10 +92,30 @@ Pinned and verified (details and sources in [`docs/adr/0002-runtime-and-tool-ver
 Node >= 24, pnpm 11.25.0, TypeScript 6.0.3, Rust 1.98.1 (host), Solana CLI 4.2.2, Anchor 1.2.0, Surfpool 1.6.0, LiteSVM 0.16,
 `@meteora-ag/dlmm` 1.9.14. See [`docs/ENVIRONMENT_SETUP.md`](docs/ENVIRONMENT_SETUP.md) for PostgreSQL/Redis.
 
+## Clean clone setup
+
+```bash
+git clone <this-repository-url> mandate
+cd mandate
+pnpm install
+```
+
+Install the pinned toolchain from the table below first (Node, pnpm, Rust, Solana CLI, Anchor). Then copy every
+app's env template and fill in real values (local defaults are enough for `pnpm check`; see
+[`docs/ENVIRONMENT_SETUP.md`](docs/ENVIRONMENT_SETUP.md) for PostgreSQL/Redis and key setup):
+
+```bash
+cp .env.example .env
+cp apps/web/.env.example apps/web/.env
+cp apps/api/.env.example apps/api/.env
+cp apps/indexer/.env.example apps/indexer/.env
+cp apps/scheduler/.env.example apps/scheduler/.env
+cp apps/observer/.env.example apps/observer/.env
+```
+
 ## Commands
 
 ```bash
-pnpm install
 pnpm check              # format, vectors, lint, typecheck, TS tests, rustfmt, clippy, program build, Rust tests
 pnpm program:build      # cargo build-sbf + anchor idl build
 pnpm inspect:prestocks -- --symbol OPENAI
@@ -109,8 +129,23 @@ pnpm reconcile:mandate <mandate-address>   # read-only ledger vs vault check; ex
 pnpm test:e2e             # Playwright: web app UI/wallet flows against a real browser, mocked network
 ```
 
-The two `scripts` commands are read-only and need `SOLANA_RPC_HTTP_URL`. Program, observer, indexer and
-end-to-end commands are added as their build steps land.
+The two `scripts` commands are read-only and need `SOLANA_RPC_HTTP_URL`.
+
+## Running the apps locally
+
+Each app is started from its own directory once its `.env` is filled in and, for `apps/api`/`apps/indexer`/
+`apps/scheduler`, once `pnpm db:migrate` has run against a local PostgreSQL (see
+[`docs/ENVIRONMENT_SETUP.md`](docs/ENVIRONMENT_SETUP.md)):
+
+```bash
+pnpm --filter @mandate/api dev         # read API + unsigned tx builders
+pnpm --filter @mandate/indexer dev     # chain indexer
+pnpm --filter @mandate/scheduler dev   # epoch/job scheduler
+pnpm --filter @mandate/web dev         # Next.js app, http://localhost:3000
+```
+
+`apps/observer` is run as a one-shot CLI job, not a long-lived server — see its own README/`docs/ENVIRONMENT_SETUP.md`
+for the exact epoch-measurement invocation.
 
 ## Network provenance
 

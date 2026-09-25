@@ -10,6 +10,8 @@ export const REDACTED_PATHS = [
   "headers.authorization",
   "req.headers.authorization",
   "req.headers.cookie",
+  "res.headers.authorization",
+  "res.headers['set-cookie']",
   "password",
   "secret",
   "privateKey",

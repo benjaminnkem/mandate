@@ -46,4 +46,19 @@ describe("logger", () => {
     expect(line).not.toContain('"k"');
     expect(line).toContain("[redacted]");
   });
+
+  it("redacts response auth headers and set-cookie", () => {
+    const { stream, lines } = capture();
+    const log = createLogger({ service: "api", destination: stream });
+    log.info(
+      {
+        res: { headers: { authorization: "Bearer resp", "set-cookie": "session=xyz" } },
+      },
+      "x",
+    );
+    const line = JSON.stringify(lines()[0]);
+    expect(line).not.toContain("Bearer resp");
+    expect(line).not.toContain("session=xyz");
+    expect(line).toContain("[redacted]");
+  });
 });
