@@ -8,8 +8,8 @@
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
-    "dev": "node --watch src/main.ts",
-    "start": "node src/main.ts",
+    "dev": "node init && node --watch src/main.ts",
+    "start": "node init && node src/main.ts",
     "attest": "node src/cli.ts attest"
   },
   "dependencies": {

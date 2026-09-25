@@ -1,0 +1,14 @@
+node_modules
+**/node_modules
+.git
+.next
+apps/web/.next
+apps/web/e2e-results
+apps/web/playwright-report
+target
+programs/*/target
+crates/*/target
+.surfpool
+.keys
+*.log
+.turbo
